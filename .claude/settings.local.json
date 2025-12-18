@@ -11,7 +11,14 @@
       "Bash(timeout 5 npx prisma studio:*)",
       "Bash(npm test:*)",
       "Bash(npm run lint)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(dir \"C:\\Dev\\recipe_book\")",
+      "Bash(dir:*)",
+      "Bash(npm run prisma:migrate:*)",
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(pkill:*)",
+      "Bash(git add:*)"
     ]
   }
 }

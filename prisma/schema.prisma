@@ -21,3 +21,15 @@ model SystemHealth {
 
   @@map("system_health")
 }
+
+// User model for Phase 2: Authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // bcrypt hashed
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
