@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 export default auth((req) => {
   const { pathname } = req.nextUrl
   const isAuthenticated = !!req.auth
+  const userRole = req.auth?.user?.role
 
   // Define protected routes
   const protectedRoutes = ['/dashboard']
@@ -16,6 +17,16 @@ export default auth((req) => {
     const loginUrl = new URL('/login', req.url)
     loginUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(loginUrl)
+  }
+
+  // Role-based route protection
+  const adminOnlyRoutes = ['/dashboard/settings/users', '/dashboard/settings/roles']
+  const isAdminRoute = adminOnlyRoutes.some((route) =>
+    pathname.startsWith(route)
+  )
+
+  if (isAdminRoute && userRole !== 'ADMIN') {
+    return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 
   // Redirect authenticated users away from auth pages

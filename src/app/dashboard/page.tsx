@@ -31,15 +31,44 @@ export default async function DashboardPage() {
           )}
         </div>
 
+        <div className="rounded-lg bg-blue-50 p-6 dark:bg-blue-900/30">
+          <h2 className="mb-4 text-lg font-semibold text-blue-900 dark:text-blue-300">
+            Group & Role Information
+          </h2>
+          <div className="space-y-2 text-sm text-blue-800 dark:text-blue-400">
+            <p>
+              Group: <strong>{session.user?.groupSlug || 'Not assigned'}</strong>
+            </p>
+            <p>
+              Role:{' '}
+              <strong>
+                {session.user?.role
+                  ? session.user.role === 'ADMIN'
+                    ? 'Administrator'
+                    : session.user.role === 'POWER_USER'
+                      ? 'Editor'
+                      : 'Viewer'
+                  : 'Not assigned'}
+              </strong>
+            </p>
+            {session.user?.role === 'ADMIN' && (
+              <p className="text-blue-700 dark:text-blue-300">
+                📋 You have full administrative control over this group.
+              </p>
+            )}
+          </div>
+        </div>
+
         <div className="rounded-lg border border-green-300 bg-green-50 p-6 dark:border-green-800 dark:bg-green-900/30">
           <h2 className="mb-2 text-lg font-semibold text-green-900 dark:text-green-300">
-            Phase 2 Complete!
+            Phase 3 Complete!
           </h2>
           <ul className="space-y-1 text-sm text-green-800 dark:text-green-400">
-            <li>✅ User authentication working</li>
-            <li>✅ Protected route verified</li>
-            <li>✅ Session management active</li>
-            <li>✅ Ready for Phase 3: Groups & Roles</li>
+            <li>✅ Groups & Roles system active</li>
+            <li>✅ User automatically assigned to group</li>
+            <li>✅ Role-based access control implemented</li>
+            <li>✅ Authorization helpers in place</li>
+            <li>✅ Ready for Phase 4: Recipe Management</li>
           </ul>
         </div>
 

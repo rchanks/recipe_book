@@ -24,12 +24,47 @@ model SystemHealth {
 
 // User model for Phase 2: Authentication
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   // bcrypt hashed
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String            @id @default(cuid())
+  email       String            @unique
+  password    String            // bcrypt hashed
+  name        String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  memberships GroupMembership[]
 
   @@map("users")
+}
+
+// Phase 3: Groups & Roles
+enum Role {
+  ADMIN
+  POWER_USER
+  READ_ONLY
+}
+
+model Group {
+  id                 String            @id @default(cuid())
+  name               String
+  slug               String            @unique
+  allowPowerUserEdit Boolean           @default(true)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  memberships        GroupMembership[]
+
+  @@map("groups")
+}
+
+model GroupMembership {
+  id       String   @id @default(cuid())
+  role     Role     @default(READ_ONLY)
+  joinedAt DateTime @default(now())
+  userId   String
+  groupId  String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([groupId])
+  @@index([userId])
+  @@map("group_memberships")
 }

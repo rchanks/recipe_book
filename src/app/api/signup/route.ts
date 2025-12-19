@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, validateEmail, validatePassword } from '@/lib/auth-utils'
+import {
+  generateGroupSlug,
+  generateDefaultGroupName,
+} from '@/lib/group-utils'
 
 /**
  * User Signup Endpoint
@@ -54,23 +58,49 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email: email.toLowerCase(),
-        password: hashedPassword,
-        name: name ? name.trim() : null,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-      },
+    // Create user, group, and membership atomically
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create user
+      const user = await tx.user.create({
+        data: {
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          name: name ? name.trim() : null,
+        },
+      })
+
+      // 2. Create group
+      const groupName = generateDefaultGroupName(user.name, user.email)
+      const group = await tx.group.create({
+        data: {
+          name: groupName,
+          slug: generateGroupSlug(user.id),
+          allowPowerUserEdit: true,
+        },
+      })
+
+      // 3. Create membership (user is ADMIN of their own group)
+      await tx.groupMembership.create({
+        data: {
+          userId: user.id,
+          groupId: group.id,
+          role: 'ADMIN',
+        },
+      })
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          createdAt: user.createdAt,
+        },
+        group,
+      }
     })
 
     return NextResponse.json(
-      { user, message: 'Account created successfully' },
+      { user: result.user, message: 'Account created successfully' },
       { status: 201 }
     )
   } catch (error) {

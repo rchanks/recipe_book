@@ -66,18 +66,35 @@ const authConfig = {
     async jwt({ token, user }) {
       // Add user ID to token on signin
       if (user) {
+        // Fetch user's primary group membership
+        const membership = await prisma.groupMembership.findFirst({
+          where: { userId: user.id },
+          include: { group: true },
+          orderBy: { joinedAt: 'asc' },
+        })
+
         token.id = user.id
         token.email = user.email
         token.name = user.name
+
+        // Add group and role to token
+        if (membership) {
+          token.groupId = membership.groupId
+          token.groupSlug = membership.group.slug
+          token.role = membership.role
+        }
       }
       return token
     },
     async session({ session, token }) {
-      // Add user ID to session
+      // Add user ID and group/role to session
       if (token && session.user) {
         session.user.id = token.id as string
         session.user.email = token.email as string
         session.user.name = token.name as string | null
+        session.user.groupId = token.groupId as string
+        session.user.groupSlug = token.groupSlug as string
+        session.user.role = token.role as any
       }
       return session
     },
