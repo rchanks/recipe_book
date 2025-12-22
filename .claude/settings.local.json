@@ -19,7 +19,20 @@
       "Bash(taskkill:*)",
       "Bash(pkill:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cat:*)",
+      "Bash(findstr:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(curl:*)",
+      "Bash(kill:*)",
+      "Bash(npm run prisma:migrate:dev:*)",
+      "Bash(npm run:*)",
+      "Bash(node -e:*)",
+      "Bash(bash -c 'export DATABASE_URL=\"\"postgresql://postgres:postgres123@localhost:5432/recipe_book_dev\"\" && npx prisma migrate deploy')",
+      "Bash(bash -c 'export DATABASE_URL=\"\"postgresql://postgres:postgres123@localhost:5432/recipe_book_dev\"\" && npx ts-node prisma/seed.ts')",
+      "Bash(bash -c 'export DATABASE_URL=\"\"postgresql://postgres:postgres123@localhost:5432/recipe_book_dev\"\" && npx prisma studio --browser none &')",
+      "Bash(bash -c:*)",
+      "Bash(netstat:*)"
     ]
   }
 }

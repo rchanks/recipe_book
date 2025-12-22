@@ -1,6 +1,8 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { LogoutButton } from '@/components/auth/LogoutButton'
+import { hasPermission } from '@/lib/authorization'
 
 /**
  * Dashboard Page - Protected Route Example
@@ -59,6 +61,21 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        <div className="space-y-3 rounded-lg border border-purple-300 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-900/30">
+          <h2 className="text-lg font-semibold text-purple-900 dark:text-purple-300">
+            Phase 4: Recipe Management
+          </h2>
+          <p className="text-sm text-purple-800 dark:text-purple-400">
+            View and manage recipes for your group
+          </p>
+          <Link
+            href="/recipes"
+            className="inline-block rounded bg-purple-600 px-4 py-2 font-medium text-white hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800"
+          >
+            📖 Go to Recipes
+          </Link>
+        </div>
+
         <div className="rounded-lg border border-green-300 bg-green-50 p-6 dark:border-green-800 dark:bg-green-900/30">
           <h2 className="mb-2 text-lg font-semibold text-green-900 dark:text-green-300">
             Phase 3 Complete!
@@ -68,7 +85,6 @@ export default async function DashboardPage() {
             <li>✅ User automatically assigned to group</li>
             <li>✅ Role-based access control implemented</li>
             <li>✅ Authorization helpers in place</li>
-            <li>✅ Ready for Phase 4: Recipe Management</li>
           </ul>
         </div>
 

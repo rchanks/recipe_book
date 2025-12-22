@@ -74,3 +74,67 @@ export interface UserWithGroup extends User {
   groupSlug: string
   role: Role
 }
+
+// Phase 4: Recipe types
+export interface Ingredient {
+  quantity: string
+  unit?: string | null
+  name: string
+  note?: string | null
+}
+
+export interface RecipeStep {
+  stepNumber: number
+  instruction: string
+  notes?: string | null
+}
+
+export interface Recipe {
+  id: string
+  title: string
+  description?: string | null
+  ingredients: Ingredient[]
+  steps: RecipeStep[]
+  servings?: number | null
+  prepTime?: number | null
+  cookTime?: number | null
+  notes?: string | null
+  familyStory?: string | null
+  photoUrl?: string | null
+  createdBy: string
+  creator: UserPublic
+  groupId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface RecipeFormData {
+  title: string
+  description: string
+  ingredients: Ingredient[]
+  steps: RecipeStep[]
+  servings: string
+  prepTime: string
+  cookTime: string
+  notes: string
+  familyStory: string
+}
+
+// Phase 6: Category and Tag types (prepare for future)
+export interface Category {
+  id: string
+  name: string
+  slug: string
+  groupId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Tag {
+  id: string
+  name: string
+  slug: string
+  groupId: string
+  createdAt: Date
+  updatedAt: Date
+}

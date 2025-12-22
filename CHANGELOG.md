@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Phase 4: Recipe Core - CRUD (Dec 19, 2025)
+
+#### Added
+
+- **Recipe Model**: Complete Prisma schema with structured data
+  - Core fields: title, description, servings, prepTime, cookTime
+  - Structured JSON arrays for ingredients and steps
+  - Family story and general notes fields
+  - Photo URL placeholder for Phase 8
+  - Relations to User (creator) and Group (ownership)
+- **API Endpoints**:
+  - `GET /api/recipes` - List recipes with pagination (20 items/page)
+  - `POST /api/recipes` - Create new recipe (requires `recipe:create` permission)
+  - `GET /api/recipes/[id]` - Retrieve single recipe detail
+  - `PUT /api/recipes/[id]` - Update recipe (respects group edit governance)
+  - `DELETE /api/recipes/[id]` - Delete recipe (admin-only)
+- **Recipe Pages**:
+  - `/recipes` - List view with pagination and action buttons
+  - `/recipes/new` - Create recipe form
+  - `/recipes/[id]` - Detail view optimized for cooking/reading
+  - `/recipes/[id]/edit` - Edit recipe form
+- **React Components**:
+  - `RecipeList` - Paginated recipe grid with edit/delete actions
+  - `RecipeCard` - Recipe summary card with metadata
+  - `RecipeForm` - Unified create/edit form with full validation
+  - `RecipeDetail` - Full recipe display with cooking-friendly layout
+  - `IngredientInput` - Dynamic ingredient management
+  - `StepInput` - Dynamic step management with auto-numbering
+  - `RecipeMetadata` - Display servings and cook times with icons
+- **Full Validation**:
+  - Server-side validation for all inputs
+  - Client-side form validation
+  - Ingredient: minimum 1 required, quantity, unit, name (required), optional notes
+  - Steps: minimum 1 required, step number (auto), instruction (required), optional notes
+  - Metadata: positive servings, non-negative times, max 200 char title
+- **Authorization**:
+  - Permission checks integrated with role-based access control
+  - `recipe:create` - ADMIN, POWER_USER
+  - `recipe:read` - All authenticated users
+  - `recipe:update` - ADMIN, POWER_USER (respects group governance)
+  - `recipe:delete` - ADMIN only
+  - Group isolation ensures users only access their group's recipes
+- **Type Safety**: Full TypeScript interfaces for Recipe, Ingredient, RecipeStep, RecipeFormData
+
+#### Changed
+
+- **Prisma Schema**: Added Recipe model with complex JSON fields
+- **Types**: Extended to include Recipe-related interfaces and enums
+- **Authorization**: Enhanced permission matrix to include recipe permissions
+- **Middleware**: Recipe routes included in authorization checks
+
+#### Infrastructure
+
+- Recipe model includes database indexes on `groupId`, `createdBy`, and `title`
+- Foreign key relations to User and Group with cascading deletes
+- JSON field validation at database level
+
+#### Not Yet Implemented
+
+- Unit and integration tests for recipe endpoints (Phase 5 task)
+- Recipe search/filtering functionality (Phase 6)
+- Photo upload handling (Phase 8)
+- Comments on recipes (Phase 7)
+
+---
+
 ### Phase 3: Groups & Roles (Dec 18, 2025)
 
 #### Added

@@ -106,3 +106,36 @@ export async function getUserPrimaryGroup(userId: string) {
 
   return membership
 }
+
+/**
+ * Check if user can delete a recipe (only admins)
+ */
+export async function canDeleteRecipe(
+  userId: string,
+  groupId: string
+): Promise<boolean> {
+  const role = await getUserRole(userId, groupId)
+  return role === 'ADMIN'
+}
+
+/**
+ * Verify user has access to a specific recipe (same group)
+ * Throws an error if not found or not authorized
+ */
+export async function requireRecipeAccess(
+  userId: string,
+  recipeId: string
+) {
+  const recipe = await prisma.recipe.findUnique({
+    where: { id: recipeId },
+    select: { groupId: true },
+  })
+
+  if (!recipe) {
+    throw new Error('Recipe not found')
+  }
+
+  await requireGroupMembership(userId, recipe.groupId)
+
+  return recipe
+}

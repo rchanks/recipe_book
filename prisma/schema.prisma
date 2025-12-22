@@ -31,6 +31,7 @@ model User {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   memberships GroupMembership[]
+  recipes     Recipe[]          // Phase 4: Recipes created by this user
 
   @@map("users")
 }
@@ -50,6 +51,9 @@ model Group {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   memberships        GroupMembership[]
+  recipes            Recipe[]          // Phase 4: Recipes in this group
+  categories         Category[]        // Phase 6: Categories in this group
+  tags               Tag[]             // Phase 6: Tags in this group
 
   @@map("groups")
 }
@@ -67,4 +71,103 @@ model GroupMembership {
   @@index([groupId])
   @@index([userId])
   @@map("group_memberships")
+}
+
+// Phase 4: Recipe model with structured ingredients and steps
+model Recipe {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+
+  // Structured JSON data
+  ingredients Json     // Array of {quantity, unit, name, note}
+  steps       Json     // Array of {stepNumber, instruction, notes}
+
+  // Optional metadata
+  servings    Int?
+  prepTime    Int?     // minutes
+  cookTime    Int?     // minutes
+  notes       String?  @db.Text
+  familyStory String?  @db.Text
+  photoUrl    String?  // Phase 8: Photo upload
+
+  // Relations
+  createdBy   String
+  creator     User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  groupId     String
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Phase 6 relations
+  categories  RecipeCategory[]
+  tags        RecipeTag[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([groupId])
+  @@index([createdBy])
+  @@index([title])
+  @@map("recipes")
+}
+
+// Phase 6: Category model
+model Category {
+  id        String           @id @default(cuid())
+  name      String
+  slug      String
+  groupId   String
+  group     Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  recipes   RecipeCategory[]
+
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([slug, groupId])
+  @@index([groupId])
+  @@map("categories")
+}
+
+// Phase 6: Tag model
+model Tag {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String
+  groupId   String
+  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  recipes   RecipeTag[]
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([slug, groupId])
+  @@index([groupId])
+  @@map("tags")
+}
+
+// Phase 6: Junction table for Recipe-Category many-to-many
+model RecipeCategory {
+  id         String   @id @default(cuid())
+  recipeId   String
+  categoryId String
+  recipe     Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, categoryId])
+  @@index([recipeId])
+  @@index([categoryId])
+  @@map("recipe_categories")
+}
+
+// Phase 6: Junction table for Recipe-Tag many-to-many
+model RecipeTag {
+  id       String @id @default(cuid())
+  recipeId String
+  tagId    String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, tagId])
+  @@index([recipeId])
+  @@index([tagId])
+  @@map("recipe_tags")
 }

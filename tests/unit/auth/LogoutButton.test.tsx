@@ -7,6 +7,14 @@ jest.mock('next-auth/react', () => ({
   signOut: jest.fn(),
 }))
 
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    refresh: jest.fn(),
+  }),
+}))
+
 describe('LogoutButton Component', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -17,7 +25,7 @@ describe('LogoutButton Component', () => {
     expect(screen.getByRole('button', { name: /log out/i })).toBeInTheDocument()
   })
 
-  test('calls signOut with correct callback URL when clicked', async () => {
+  test('calls signOut without redirect when clicked', async () => {
     ;(signOut as jest.Mock).mockResolvedValue(undefined)
 
     render(<LogoutButton />)
@@ -26,8 +34,22 @@ describe('LogoutButton Component', () => {
     fireEvent.click(button)
 
     await waitFor(() => {
-      expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/' })
+      expect(signOut).toHaveBeenCalledWith({ redirect: false })
     })
   })
 
+  test('shows loading state while logging out', async () => {
+    ;(signOut as jest.Mock).mockImplementation(
+      () => new Promise(resolve => setTimeout(resolve, 100))
+    )
+
+    render(<LogoutButton />)
+    const button = screen.getByRole('button')
+
+    fireEvent.click(button)
+
+    await waitFor(() => {
+      expect(screen.getByText(/logging out/i)).toBeInTheDocument()
+    })
+  })
 })
