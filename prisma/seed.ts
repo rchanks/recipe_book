@@ -8,9 +8,12 @@ async function main() {
 
   // Clean up existing data
   console.log('Cleaning up existing data...')
+  await prisma.favorite.deleteMany()
   await prisma.recipeTag.deleteMany()
   await prisma.recipeCategory.deleteMany()
   await prisma.recipe.deleteMany()
+  await prisma.tag.deleteMany()
+  await prisma.category.deleteMany()
   await prisma.groupMembership.deleteMany()
   await prisma.group.deleteMany()
   await prisma.user.deleteMany()
@@ -72,6 +75,50 @@ async function main() {
       },
     ],
   })
+
+  // Create starter categories
+  console.log('Creating starter categories...')
+  const categoryNames = [
+    'Breakfast',
+    'Lunch',
+    'Dinner',
+    'Desserts',
+    'Appetizers',
+    'Snacks',
+    'Drinks',
+    'Baking',
+  ]
+
+  const categories = await Promise.all(
+    categoryNames.map((name) =>
+      prisma.category.create({
+        data: {
+          name,
+          slug: name.toLowerCase(),
+          groupId: group.id,
+        },
+      })
+    )
+  )
+
+  console.log(`✅ Created ${categories.length} starter categories`)
+
+  // Create sample tags
+  console.log('Creating sample tags...')
+  const tagNames = ['Easy', 'Quick', 'Vegetarian', 'Kid-Friendly']
+  const tags = await Promise.all(
+    tagNames.map((name) =>
+      prisma.tag.create({
+        data: {
+          name,
+          slug: name.toLowerCase().replace(/\s+/g, '-'),
+          groupId: group.id,
+        },
+      })
+    )
+  )
+
+  console.log(`✅ Created ${tags.length} sample tags`)
 
   // Create sample recipes
   console.log('Creating sample recipes...')
@@ -446,7 +493,29 @@ async function main() {
     },
   })
 
+  // Assign categories to sample recipes
+  console.log('Assigning categories to recipes...')
+  await prisma.recipeCategory.createMany({
+    data: [
+      { recipeId: recipe1.id, categoryId: categories[3].id }, // Desserts
+      { recipeId: recipe2.id, categoryId: categories[2].id }, // Dinner
+      { recipeId: recipe3.id, categoryId: categories[2].id }, // Dinner
+    ],
+  })
+
+  // Assign tags to sample recipes
+  console.log('Assigning tags to recipes...')
+  await prisma.recipeTag.createMany({
+    data: [
+      { recipeId: recipe1.id, tagId: tags[3].id }, // Kid-Friendly
+      { recipeId: recipe2.id, tagId: tags[1].id }, // Quick
+      { recipeId: recipe3.id, tagId: tags[0].id }, // Easy
+    ],
+  })
+
   console.log(`✅ Created ${3} recipes`)
+  console.log(`✅ Created ${categories.length} categories`)
+  console.log(`✅ Created ${tags.length} tags`)
   console.log(`✅ Created ${1} group`)
   console.log(`✅ Created ${3} users`)
   console.log('')

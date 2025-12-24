@@ -44,6 +44,12 @@ export async function GET(
             email: true,
           },
         },
+        categories: {
+          include: { category: true },
+        },
+        tags: {
+          include: { tag: true },
+        },
       },
     })
 
@@ -133,6 +139,8 @@ export async function PUT(
       cookTime,
       notes,
       familyStory,
+      categoryIds = [],
+      tagIds = [],
     } = body
 
     // Validate fields (same as POST)
@@ -216,7 +224,17 @@ export async function PUT(
       }
     }
 
-    // Update recipe
+    // Delete existing category and tag associations
+    await Promise.all([
+      prisma.recipeCategory.deleteMany({
+        where: { recipeId: id },
+      }),
+      prisma.recipeTag.deleteMany({
+        where: { recipeId: id },
+      }),
+    ])
+
+    // Update recipe with new categories and tags
     const recipe = await prisma.recipe.update({
       where: { id },
       data: {
@@ -233,6 +251,16 @@ export async function PUT(
         cookTime: cookTime ? parseInt(cookTime) : null,
         notes: notes ? notes.trim() : null,
         familyStory: familyStory ? familyStory.trim() : null,
+        categories: {
+          create: (categoryIds as string[]).map((catId) => ({
+            categoryId: catId,
+          })),
+        },
+        tags: {
+          create: (tagIds as string[]).map((tagId) => ({
+            tagId,
+          })),
+        },
       },
       include: {
         creator: {
@@ -241,6 +269,12 @@ export async function PUT(
             name: true,
             email: true,
           },
+        },
+        categories: {
+          include: { category: true },
+        },
+        tags: {
+          include: { tag: true },
         },
       },
     })

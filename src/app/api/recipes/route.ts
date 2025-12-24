@@ -20,16 +20,77 @@ export async function GET(request: NextRequest) {
     // Check permission
     await requirePermission('recipe:read')
 
-    // Get pagination parameters
+    // Get pagination and filter parameters
     const { searchParams } = new URL(request.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')))
     const skip = (page - 1) * limit
+    const search = searchParams.get('search') || ''
+    const categoryIds = searchParams.get('categoryIds')?.split(',').filter(Boolean) || []
+    const tagIds = searchParams.get('tagIds')?.split(',').filter(Boolean) || []
+    const favoritesOnly = searchParams.get('favoritesOnly') === 'true'
+    const sortBy = searchParams.get('sortBy') || 'recent'
+
+    // Build where clause dynamically
+    const where: any = {
+      groupId: session.user.groupId,
+    }
+
+    // Text search
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    // Category filter
+    if (categoryIds.length > 0) {
+      where.categories = {
+        some: { categoryId: { in: categoryIds } },
+      }
+    }
+
+    // Tag filter
+    if (tagIds.length > 0) {
+      where.tags = {
+        some: { tagId: { in: tagIds } },
+      }
+    }
+
+    // Favorites filter
+    let favoriteRecipeIds: string[] = []
+    if (favoritesOnly) {
+      const favorites = await prisma.favorite.findMany({
+        where: { userId: session.user.id },
+        select: { recipeId: true },
+      })
+      favoriteRecipeIds = favorites.map((f) => f.recipeId)
+
+      if (favoriteRecipeIds.length === 0) {
+        return NextResponse.json({
+          recipes: [],
+          total: 0,
+          page,
+          totalPages: 0,
+        })
+      }
+
+      where.id = { in: favoriteRecipeIds }
+    }
+
+    // Sort order
+    const orderBy: any =
+      sortBy === 'title'
+        ? { title: 'asc' }
+        : sortBy === 'prepTime'
+          ? { prepTime: 'asc' }
+          : { createdAt: 'desc' } // default: recent
 
     // Fetch recipes for this group
     const [recipes, total] = await Promise.all([
       prisma.recipe.findMany({
-        where: { groupId: session.user.groupId },
+        where,
         include: {
           creator: {
             select: {
@@ -38,14 +99,18 @@ export async function GET(request: NextRequest) {
               email: true,
             },
           },
+          categories: {
+            include: { category: true },
+          },
+          tags: {
+            include: { tag: true },
+          },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: limit,
       }),
-      prisma.recipe.count({
-        where: { groupId: session.user.groupId },
-      }),
+      prisma.recipe.count({ where }),
     ])
 
     // Transform recipes to include correct creator type
@@ -128,6 +193,8 @@ export async function POST(request: NextRequest) {
       cookTime,
       notes,
       familyStory,
+      categoryIds = [],
+      tagIds = [],
     } = body
 
     // Validate required fields
@@ -213,7 +280,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create recipe
+    // Create recipe with categories and tags
     const recipe = await prisma.recipe.create({
       data: {
         title: title.trim(),
@@ -231,6 +298,16 @@ export async function POST(request: NextRequest) {
         familyStory: familyStory ? familyStory.trim() : null,
         createdBy: session.user.id,
         groupId: session.user.groupId,
+        categories: {
+          create: (categoryIds as string[]).map((id) => ({
+            categoryId: id,
+          })),
+        },
+        tags: {
+          create: (tagIds as string[]).map((id) => ({
+            tagId: id,
+          })),
+        },
       },
       include: {
         creator: {
@@ -239,6 +316,12 @@ export async function POST(request: NextRequest) {
             name: true,
             email: true,
           },
+        },
+        categories: {
+          include: { category: true },
+        },
+        tags: {
+          include: { tag: true },
         },
       },
     })

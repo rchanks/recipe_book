@@ -32,6 +32,7 @@ model User {
   updatedAt   DateTime          @updatedAt
   memberships GroupMembership[]
   recipes     Recipe[]          // Phase 4: Recipes created by this user
+  favorites   Favorite[]        // Phase 6: User favorites
 
   @@map("users")
 }
@@ -100,6 +101,7 @@ model Recipe {
   // Phase 6 relations
   categories  RecipeCategory[]
   tags        RecipeTag[]
+  favorites   Favorite[]        // Phase 6: Users who favorited this recipe
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -170,4 +172,19 @@ model RecipeTag {
   @@index([recipeId])
   @@index([tagId])
   @@map("recipe_tags")
+}
+
+// Phase 6: Favorite model for user-specific favorites
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  recipeId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+  @@index([userId])
+  @@index([recipeId])
+  @@map("favorites")
 }
