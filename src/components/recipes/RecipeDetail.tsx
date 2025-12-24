@@ -10,6 +10,8 @@ interface RecipeDetailProps {
   recipe: Recipe
   canEdit?: boolean
   canDelete?: boolean
+  isFavorited?: boolean
+  onToggleFavorite?: () => void
 }
 
 /**
@@ -19,6 +21,8 @@ export function RecipeDetail({
   recipe,
   canEdit = false,
   canDelete = false,
+  isFavorited = false,
+  onToggleFavorite,
 }: RecipeDetailProps) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = React.useState(false)
@@ -83,6 +87,28 @@ export function RecipeDetail({
           />
         </div>
 
+        {/* Categories and Tags */}
+        {(recipe.categories.length > 0 || recipe.tags.length > 0) && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {recipe.categories.map(({ category }) => (
+              <span
+                key={category.id}
+                className="rounded-md bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+              >
+                {category.name}
+              </span>
+            ))}
+            {recipe.tags.map(({ tag }) => (
+              <span
+                key={tag.id}
+                className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200"
+              >
+                #{tag.name}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Creator and date */}
         <div className="text-sm text-gray-600 dark:text-gray-400">
           <p>
@@ -102,7 +128,7 @@ export function RecipeDetail({
         </div>
 
         {/* Action buttons */}
-        {(canEdit || canDelete) && (
+        {(canEdit || canDelete || onToggleFavorite) && (
           <div className="mt-4 flex gap-2">
             {canEdit && (
               <button
@@ -119,6 +145,18 @@ export function RecipeDetail({
                 className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50 dark:bg-red-700 dark:hover:bg-red-800"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Recipe'}
+              </button>
+            )}
+            {onToggleFavorite && (
+              <button
+                onClick={onToggleFavorite}
+                className={`rounded px-4 py-2 font-medium transition ${
+                  isFavorited
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-200 dark:hover:bg-red-900/50'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                {isFavorited ? '❤️ Favorited' : '🤍 Add to Favorites'}
               </button>
             )}
           </div>

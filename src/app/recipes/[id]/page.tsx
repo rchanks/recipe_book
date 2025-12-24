@@ -8,6 +8,7 @@ import {
   requireGroupMembership,
 } from '@/lib/authorization'
 import { RecipeDetail } from '@/components/recipes/RecipeDetail'
+import { RecipeDetailWrapper } from '@/components/recipes/RecipeDetailWrapper'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import type { Recipe, Ingredient, RecipeStep } from '@/types'
 
@@ -27,7 +28,7 @@ export default async function RecipeDetailPage({
     redirect('/login')
   }
 
-  // Fetch recipe
+  // Fetch recipe with categories and tags
   const recipe = await prisma.recipe.findUnique({
     where: { id },
     include: {
@@ -38,8 +39,30 @@ export default async function RecipeDetailPage({
           email: true,
         },
       },
+      categories: {
+        include: { category: true },
+      },
+      tags: {
+        include: { tag: true },
+      },
     },
   })
+
+  // Check if user has favorited this recipe
+  let isFavorited = false
+  try {
+    const favorite = await prisma.favorite.findUnique({
+      where: {
+        userId_recipeId: {
+          userId: session.user.id,
+          recipeId: id,
+        },
+      },
+    })
+    isFavorited = !!favorite
+  } catch (error) {
+    // Ignore error, just default to false
+  }
 
   // Check if recipe exists
   if (!recipe) {
@@ -67,6 +90,9 @@ export default async function RecipeDetailPage({
       name: recipe.creator.name,
       email: recipe.creator.email,
     },
+    categories: recipe.categories,
+    tags: recipe.tags,
+    favorites: [], // Server-side, we only need to know if current user favorited it
     createdAt: recipe.createdAt,
     updatedAt: recipe.updatedAt,
   }
@@ -90,10 +116,11 @@ export default async function RecipeDetailPage({
 
       {/* Main content */}
       <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-        <RecipeDetail
+        <RecipeDetailWrapper
           recipe={transformedRecipe}
           canEdit={canEdit}
           canDelete={canDelete}
+          initialIsFavorited={isFavorited}
         />
       </div>
     </main>
