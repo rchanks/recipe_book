@@ -11,6 +11,7 @@ interface Session {
     email: string
     name: string
     role: string
+    groupId: string
   }
 }
 
@@ -27,24 +28,42 @@ export function RecipeList() {
   const [totalPages, setTotalPages] = useState(0)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [allowPowerUserEdit, setAllowPowerUserEdit] = useState(true)
 
   const limit = 20
 
-  // Fetch user session to determine permissions
+  // Fetch user session and group governance settings
   useEffect(() => {
-    async function fetchSession() {
+    async function fetchSessionAndSettings() {
       try {
         const response = await fetch('/api/auth/session')
         if (response.ok) {
           const session: Session = await response.json()
           setUserRole(session.user?.role || null)
+
+          // If user is POWER_USER, fetch group settings to check allowPowerUserEdit
+          if (session.user?.role === 'POWER_USER' && session.user?.groupId) {
+            try {
+              const groupResponse = await fetch(
+                `/api/groups/${session.user.groupId}`
+              )
+              if (groupResponse.ok) {
+                const groupData = await groupResponse.json()
+                setAllowPowerUserEdit(groupData.allowPowerUserEdit ?? true)
+              }
+            } catch (err) {
+              console.error('Error fetching group settings:', err)
+              // Default to true if we can't fetch
+              setAllowPowerUserEdit(true)
+            }
+          }
         }
       } catch (err) {
         console.error('Error fetching session:', err)
       }
     }
 
-    fetchSession()
+    fetchSessionAndSettings()
   }, [])
 
   // Fetch recipes
@@ -146,8 +165,10 @@ export function RecipeList() {
     )
   }
 
-  // Determine permissions based on role
-  const canEdit = userRole === 'ADMIN' || userRole === 'POWER_USER'
+  // Determine permissions based on role and governance settings
+  const canEdit =
+    userRole === 'ADMIN' ||
+    (userRole === 'POWER_USER' && allowPowerUserEdit)
   const canDelete = userRole === 'ADMIN'
 
   return (

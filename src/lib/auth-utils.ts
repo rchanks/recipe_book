@@ -54,3 +54,19 @@ export function validateEmail(email: string): {
   }
   return { valid: true }
 }
+
+/**
+ * Generate a secure temporary password
+ * @returns string - 16 character password with mixed case, numbers, and symbols
+ */
+export function generateTemporaryPassword(): string {
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
+  const length = 16
+  let password = ''
+  const array = new Uint8Array(length)
+  crypto.getRandomValues(array)
+  for (let i = 0; i < length; i++) {
+    password += charset[array[i] % charset.length]
+  }
+  return password
+}

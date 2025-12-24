@@ -44,14 +44,24 @@ export default async function RecipesPage() {
             </div>
             <LogoutButton />
           </div>
-          {canCreate && (
-            <Link
-              href="/recipes/new"
-              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-            >
-              + Add Recipe
-            </Link>
-          )}
+          <div className="flex gap-3">
+            {canCreate && (
+              <Link
+                href="/recipes/new"
+                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+              >
+                + Add Recipe
+              </Link>
+            )}
+            {session.user.role === 'ADMIN' && (
+              <Link
+                href="/admin"
+                className="rounded bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-800"
+              >
+                👥 Manage Users
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

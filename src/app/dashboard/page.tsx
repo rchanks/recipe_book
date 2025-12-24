@@ -76,6 +76,23 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
+        {session.user?.role === 'ADMIN' && (
+          <div className="space-y-3 rounded-lg border border-orange-300 bg-orange-50 p-6 dark:border-orange-800 dark:bg-orange-900/30">
+            <h2 className="text-lg font-semibold text-orange-900 dark:text-orange-300">
+              Phase 5: User Management
+            </h2>
+            <p className="text-sm text-orange-800 dark:text-orange-400">
+              Manage group members and their roles
+            </p>
+            <Link
+              href="/admin"
+              className="inline-block rounded bg-orange-600 px-4 py-2 font-medium text-white hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-800"
+            >
+              👥 Manage Users
+            </Link>
+          </div>
+        )}
+
         <div className="rounded-lg border border-green-300 bg-green-50 p-6 dark:border-green-800 dark:bg-green-900/30">
           <h2 className="mb-2 text-lg font-semibold text-green-900 dark:text-green-300">
             Phase 3 Complete!

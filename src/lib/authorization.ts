@@ -139,3 +139,34 @@ export async function requireRecipeAccess(
 
   return recipe
 }
+
+/**
+ * Count the number of admin users in a group
+ */
+export async function countAdminsInGroup(groupId: string): Promise<number> {
+  return prisma.groupMembership.count({
+    where: { groupId, role: 'ADMIN' },
+  })
+}
+
+/**
+ * Check if removing/demoting a user would leave the group with no admins
+ */
+export async function wouldLeaveNoAdmins(
+  groupId: string,
+  userId: string,
+  action: 'remove' | 'demote'
+): Promise<boolean> {
+  const adminCount = await countAdminsInGroup(groupId)
+
+  // Check if target user is currently an admin
+  const membership = await prisma.groupMembership.findUnique({
+    where: { userId_groupId: { userId, groupId } },
+  })
+
+  if (membership?.role !== 'ADMIN') {
+    return false // Not an admin, won't affect admin count
+  }
+
+  return adminCount <= 1 // Would leave 0 admins
+}
