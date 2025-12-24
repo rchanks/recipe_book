@@ -47,6 +47,21 @@ describe('RecipeCard Component', () => {
       name: 'John Doe',
       email: 'john@example.com',
     },
+    categories: [
+      {
+        id: 'rc-1',
+        categoryId: 'cat-1',
+        category: { id: 'cat-1', name: 'Dinner', slug: 'dinner', groupId: 'group-456' },
+      },
+    ],
+    tags: [
+      {
+        id: 'rt-1',
+        tagId: 'tag-1',
+        tag: { id: 'tag-1', name: 'Quick', slug: 'quick', groupId: 'group-456' },
+      },
+    ],
+    favorites: [],
     createdAt: new Date('2025-12-22'),
     updatedAt: new Date('2025-12-22'),
   }

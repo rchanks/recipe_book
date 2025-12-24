@@ -8,10 +8,12 @@ export const PERMISSIONS = {
   'recipe:delete': ['ADMIN'],
 
   // Category/Tag permissions
+  'category:read': ['ADMIN', 'POWER_USER', 'READ_ONLY'],
   'category:create': ['ADMIN', 'POWER_USER'],
   'category:update': ['ADMIN', 'POWER_USER'],
   'category:delete': ['ADMIN'],
 
+  'tag:read': ['ADMIN', 'POWER_USER', 'READ_ONLY'],
   'tag:create': ['ADMIN', 'POWER_USER'],
   'tag:update': ['ADMIN', 'POWER_USER'],
   'tag:delete': ['ADMIN'],
@@ -30,6 +32,7 @@ export const PERMISSIONS = {
   'comment:delete_any': ['ADMIN'],
 
   // Favorite permissions
+  'favorite:read': ['ADMIN', 'POWER_USER', 'READ_ONLY'],
   'favorite:create': ['ADMIN', 'POWER_USER', 'READ_ONLY'],
   'favorite:delete': ['ADMIN', 'POWER_USER', 'READ_ONLY'],
 } as const

@@ -1,6 +1,5 @@
 import { Role } from '@prisma/client'
 import { PERMISSIONS, Permission } from './permissions'
-import { auth } from './auth'
 import { prisma } from './prisma'
 
 /**
@@ -16,6 +15,7 @@ export function hasPermission(role: Role, permission: Permission): boolean {
  * Throws an error if unauthorized
  */
 export async function requirePermission(permission: Permission) {
+  const { auth } = await import('./auth')
   const session = await auth()
 
   if (!session?.user) {
