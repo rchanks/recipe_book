@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
         name: recipe.creator.name,
         email: recipe.creator.email,
       },
+      favorites: [],
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
     }))
@@ -335,6 +336,7 @@ export async function POST(request: NextRequest) {
         name: recipe.creator.name,
         email: recipe.creator.email,
       },
+      favorites: [],
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
     }

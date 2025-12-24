@@ -27,9 +27,17 @@ export async function generateUniqueSlug(
   let counter = 1
 
   while (true) {
-    const existing = await prisma[model].findUnique({
-      where: { slug_groupId: { slug, groupId } },
-    })
+    let existing: any = null
+
+    if (model === 'category') {
+      existing = await prisma.category.findUnique({
+        where: { slug_groupId: { slug, groupId } },
+      })
+    } else {
+      existing = await prisma.tag.findUnique({
+        where: { slug_groupId: { slug, groupId } },
+      })
+    }
 
     if (!existing || existing.id === excludeId) {
       return slug

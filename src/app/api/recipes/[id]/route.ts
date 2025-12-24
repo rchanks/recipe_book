@@ -66,6 +66,7 @@ export async function GET(
         name: recipe.creator.name,
         email: recipe.creator.email,
       },
+      favorites: [],
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
     }
@@ -288,6 +289,7 @@ export async function PUT(
         name: recipe.creator.name,
         email: recipe.creator.email,
       },
+      favorites: [],
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
     }

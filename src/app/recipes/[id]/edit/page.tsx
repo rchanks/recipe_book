@@ -65,6 +65,9 @@ export default async function EditRecipePage({
       name: recipe.creator.name,
       email: recipe.creator.email,
     },
+    categories: [],
+    tags: [],
+    favorites: [],
     createdAt: recipe.createdAt,
     updatedAt: recipe.updatedAt,
   }
