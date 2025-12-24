@@ -104,6 +104,17 @@ export interface Recipe {
   createdBy: string
   creator: UserPublic
   groupId: string
+  categories: Array<{
+    id: string
+    categoryId: string
+    category: Category
+  }>
+  tags: Array<{
+    id: string
+    tagId: string
+    tag: Tag
+  }>
+  favorites: Favorite[]
   createdAt: Date
   updatedAt: Date
 }
@@ -118,6 +129,8 @@ export interface RecipeFormData {
   cookTime: string
   notes: string
   familyStory: string
+  categoryIds: string[]
+  tagIds: string[]
 }
 
 // Phase 6: Category and Tag types (prepare for future)
@@ -137,6 +150,14 @@ export interface Tag {
   groupId: string
   createdAt: Date
   updatedAt: Date
+}
+
+// Phase 6: Favorite type
+export interface Favorite {
+  id: string
+  userId: string
+  recipeId: string
+  createdAt: Date
 }
 
 // Phase 5: User Management types

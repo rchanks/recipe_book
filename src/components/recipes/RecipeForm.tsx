@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { IngredientInput } from './IngredientInput'
 import { StepInput } from './StepInput'
-import type { Recipe, RecipeFormData, Ingredient, RecipeStep } from '@/types'
+import type { Recipe, RecipeFormData, Ingredient, RecipeStep, Category, Tag } from '@/types'
 
 interface RecipeFormProps {
   recipe?: Recipe
@@ -19,6 +19,8 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([])
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
 
   // Initialize form data
   const [formData, setFormData] = useState<RecipeFormData>({
@@ -33,7 +35,35 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
     cookTime: recipe?.cookTime?.toString() || '',
     notes: recipe?.notes || '',
     familyStory: recipe?.familyStory || '',
+    categoryIds: recipe?.categories?.map((rc) => rc.categoryId) || [],
+    tagIds: recipe?.tags?.map((rt) => rt.tagId) || [],
   })
+
+  // Fetch categories and tags on mount
+  useEffect(() => {
+    async function fetchCategoriesAndTags() {
+      try {
+        const [catRes, tagRes] = await Promise.all([
+          fetch('/api/categories'),
+          fetch('/api/tags'),
+        ])
+
+        if (catRes.ok) {
+          const data = await catRes.json()
+          setAvailableCategories(data.categories || [])
+        }
+
+        if (tagRes.ok) {
+          const data = await tagRes.json()
+          setAvailableTags(data.tags || [])
+        }
+      } catch (err) {
+        console.error('Error fetching categories and tags:', err)
+      }
+    }
+
+    fetchCategoriesAndTags()
+  }, [])
 
   // Validation function
   function validateForm(): string | null {
@@ -92,6 +122,8 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
         cookTime: formData.cookTime ? parseInt(formData.cookTime) : null,
         notes: formData.notes ? formData.notes.trim() : null,
         familyStory: formData.familyStory ? formData.familyStory.trim() : null,
+        categoryIds: formData.categoryIds,
+        tagIds: formData.tagIds,
       }
 
       // Make API request
@@ -177,6 +209,78 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
           className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
         />
       </div>
+
+      {/* Categories */}
+      {availableCategories.length > 0 && (
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Categories (Optional)
+          </label>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {availableCategories.map((category) => (
+              <label
+                key={category.id}
+                className={`cursor-pointer rounded-lg border-2 px-3 py-2 transition ${
+                  formData.categoryIds.includes(category.id)
+                    ? 'border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-900/30 dark:text-blue-200'
+                    : 'border-gray-300 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.categoryIds.includes(category.id)}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      categoryIds: e.target.checked
+                        ? [...formData.categoryIds, category.id]
+                        : formData.categoryIds.filter((id) => id !== category.id),
+                    })
+                  }}
+                  className="mr-2"
+                />
+                {category.name}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tags */}
+      {availableTags.length > 0 && (
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Tags (Optional)
+          </label>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {availableTags.map((tag) => (
+              <label
+                key={tag.id}
+                className={`cursor-pointer rounded-full border-2 px-3 py-1 text-sm transition ${
+                  formData.tagIds.includes(tag.id)
+                    ? 'border-green-500 bg-green-50 text-green-900 dark:bg-green-900/30 dark:text-green-200'
+                    : 'border-gray-300 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.tagIds.includes(tag.id)}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      tagIds: e.target.checked
+                        ? [...formData.tagIds, tag.id]
+                        : formData.tagIds.filter((id) => id !== tag.id),
+                    })
+                  }}
+                  className="mr-2"
+                />
+                #{tag.name}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Ingredients */}
       <div>
