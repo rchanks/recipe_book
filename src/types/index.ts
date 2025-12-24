@@ -138,3 +138,38 @@ export interface Tag {
   createdAt: Date
   updatedAt: Date
 }
+
+// Phase 5: User Management types
+export interface GroupMember {
+  id: string
+  userId: string
+  role: Role
+  joinedAt: Date
+  user: {
+    id: string
+    email: string
+    name: string | null
+    createdAt: Date
+  }
+}
+
+export interface CreateUserRequest {
+  email: string
+  name?: string
+  role: Role
+}
+
+export interface CreateUserResponse {
+  user: UserPublic
+  temporaryPassword: string
+  message: string
+}
+
+export interface UpdateRoleRequest {
+  role: Role
+}
+
+export interface GroupMembersResponse {
+  members: GroupMember[]
+  total: number
+}
