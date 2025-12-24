@@ -9,6 +9,8 @@ interface RecipeCardProps {
   recipe: Recipe
   onEdit?: () => void
   onDelete?: () => void
+  onToggleFavorite?: () => void
+  isFavorited?: boolean
   canEdit?: boolean
   canDelete?: boolean
 }
@@ -20,6 +22,8 @@ export function RecipeCard({
   recipe,
   onEdit,
   onDelete,
+  onToggleFavorite,
+  isFavorited = false,
   canEdit = false,
   canDelete = false,
 }: RecipeCardProps) {
@@ -63,6 +67,28 @@ export function RecipeCard({
           />
         </div>
 
+        {/* Categories and Tags */}
+        {(recipe.categories.length > 0 || recipe.tags.length > 0) && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {recipe.categories.map(({ category }) => (
+              <span
+                key={category.id}
+                className="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+              >
+                {category.name}
+              </span>
+            ))}
+            {recipe.tags.map(({ tag }) => (
+              <span
+                key={tag.id}
+                className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200"
+              >
+                #{tag.name}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Creator and Date */}
         <div className="mt-auto flex items-center justify-between border-t border-gray-200 pt-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
           <span>
@@ -74,7 +100,7 @@ export function RecipeCard({
       </div>
 
       {/* Action Buttons */}
-      {(canEdit || canDelete) && (
+      {(canEdit || canDelete || onToggleFavorite) && (
         <div className="flex gap-2 border-t border-gray-200 p-4 dark:border-gray-700">
           {canEdit && onEdit && (
             <button
@@ -90,6 +116,18 @@ export function RecipeCard({
               className="flex-1 rounded bg-red-500 px-3 py-2 text-sm font-medium text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
             >
               Delete
+            </button>
+          )}
+          {onToggleFavorite && (
+            <button
+              onClick={onToggleFavorite}
+              className={`flex-1 rounded px-3 py-2 text-sm font-medium transition ${
+                isFavorited
+                  ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-200 dark:hover:bg-red-900/50'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              }`}
+            >
+              {isFavorited ? '❤️ Favorited' : '🤍 Favorite'}
             </button>
           )}
         </div>

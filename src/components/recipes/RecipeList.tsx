@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { RecipeCard } from './RecipeCard'
+import { RecipeFilters, type FilterState } from './RecipeFilters'
 import type { Recipe } from '@/types'
 
 interface Session {
@@ -29,6 +30,13 @@ export function RecipeList() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [allowPowerUserEdit, setAllowPowerUserEdit] = useState(true)
+  const [favoriteRecipeIds, setFavoriteRecipeIds] = useState<string[]>([])
+  const [filters, setFilters] = useState<FilterState>({
+    search: '',
+    categoryIds: [],
+    tagIds: [],
+    favoritesOnly: false,
+  })
 
   const limit = 20
 
@@ -66,35 +74,63 @@ export function RecipeList() {
     fetchSessionAndSettings()
   }, [])
 
-  // Fetch recipes
+  // Fetch user's favorites
   useEffect(() => {
-    async function fetchRecipes() {
+    async function fetchFavorites() {
       try {
-        setLoading(true)
-        setError('')
-
-        const response = await fetch(
-          `/api/recipes?page=${page}&limit=${limit}`
-        )
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch recipes')
+        const res = await fetch('/api/favorites')
+        if (res.ok) {
+          const data = await res.json()
+          setFavoriteRecipeIds(data.favoriteRecipeIds || [])
         }
-
-        const data = await response.json()
-        setRecipes(data.recipes)
-        setTotal(data.total)
-        setTotalPages(data.totalPages)
       } catch (err) {
-        console.error('Error fetching recipes:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load recipes')
-      } finally {
-        setLoading(false)
+        console.error('Error fetching favorites:', err)
       }
     }
 
+    fetchFavorites()
+  }, [])
+
+  // Fetch recipes with filters
+  const fetchRecipes = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError('')
+
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      })
+
+      if (filters.search) queryParams.set('search', filters.search)
+      if (filters.categoryIds.length > 0)
+        queryParams.set('categoryIds', filters.categoryIds.join(','))
+      if (filters.tagIds.length > 0)
+        queryParams.set('tagIds', filters.tagIds.join(','))
+      if (filters.favoritesOnly) queryParams.set('favoritesOnly', 'true')
+
+      const response = await fetch(`/api/recipes?${queryParams}`)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch recipes')
+      }
+
+      const data = await response.json()
+      setRecipes(data.recipes)
+      setTotal(data.total)
+      setTotalPages(data.totalPages)
+    } catch (err) {
+      console.error('Error fetching recipes:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load recipes')
+    } finally {
+      setLoading(false)
+    }
+  }, [page, filters])
+
+  // Re-fetch recipes when page or filters change
+  useEffect(() => {
     fetchRecipes()
-  }, [page])
+  }, [page, filters, fetchRecipes])
 
   // Handle recipe edit
   const handleEdit = (id: string) => {
@@ -133,6 +169,29 @@ export function RecipeList() {
     router.push(`/recipes/${id}`)
   }
 
+  // Handle toggle favorite
+  const handleToggleFavorite = async (recipeId: string) => {
+    const isFavorited = favoriteRecipeIds.includes(recipeId)
+
+    try {
+      const res = await fetch('/api/favorites', {
+        method: isFavorited ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipeId }),
+      })
+
+      if (res.ok) {
+        setFavoriteRecipeIds((prev) =>
+          isFavorited
+            ? prev.filter((id) => id !== recipeId)
+            : [...prev, recipeId]
+        )
+      }
+    } catch (err) {
+      console.error('Error toggling favorite:', err)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -155,7 +214,14 @@ export function RecipeList() {
     )
   }
 
-  if (recipes.length === 0) {
+  // Determine permissions based on role and governance settings
+  const canEdit =
+    userRole === 'ADMIN' ||
+    (userRole === 'POWER_USER' && allowPowerUserEdit)
+  const canDelete = userRole === 'ADMIN'
+
+  // Show empty state only if no filters are active
+  if (recipes.length === 0 && !Object.values(filters).some((v) => v)) {
     return (
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
         <p className="mb-4 text-gray-600 dark:text-gray-400">
@@ -165,27 +231,42 @@ export function RecipeList() {
     )
   }
 
-  // Determine permissions based on role and governance settings
-  const canEdit =
-    userRole === 'ADMIN' ||
-    (userRole === 'POWER_USER' && allowPowerUserEdit)
-  const canDelete = userRole === 'ADMIN'
-
   return (
     <div className="space-y-6">
+      {/* Filters */}
+      <RecipeFilters
+        onFilterChange={(newFilters) => {
+          setFilters(newFilters)
+          setPage(1)
+        }}
+      />
+
+      {/* No results message */}
+      {recipes.length === 0 && Object.values(filters).some((v) => v) && (
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+          <p className="text-gray-600 dark:text-gray-400">
+            No recipes match your filters. Try adjusting your search or selections.
+          </p>
+        </div>
+      )}
+
       {/* Recipe Cards */}
-      <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
-        {recipes.map((recipe) => (
-          <RecipeCard
-            key={recipe.id}
-            recipe={recipe}
-            onEdit={() => handleEdit(recipe.id)}
-            onDelete={() => handleDelete(recipe.id)}
-            canEdit={canEdit}
-            canDelete={canDelete}
-          />
-        ))}
-      </div>
+      {recipes.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+          {recipes.map((recipe) => (
+            <RecipeCard
+              key={recipe.id}
+              recipe={recipe}
+              onEdit={() => handleEdit(recipe.id)}
+              onDelete={() => handleDelete(recipe.id)}
+              onToggleFavorite={() => handleToggleFavorite(recipe.id)}
+              isFavorited={favoriteRecipeIds.includes(recipe.id)}
+              canEdit={canEdit}
+              canDelete={canDelete}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
