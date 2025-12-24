@@ -33,6 +33,7 @@ model User {
   memberships GroupMembership[]
   recipes     Recipe[]          // Phase 4: Recipes created by this user
   favorites   Favorite[]        // Phase 6: User favorites
+  comments    Comment[]         // Phase 7: User comments
 
   @@map("users")
 }
@@ -102,6 +103,7 @@ model Recipe {
   categories  RecipeCategory[]
   tags        RecipeTag[]
   favorites   Favorite[]        // Phase 6: Users who favorited this recipe
+  comments    Comment[]         // Phase 7: Recipe comments
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -187,4 +189,20 @@ model Favorite {
   @@index([userId])
   @@index([recipeId])
   @@map("favorites")
+}
+
+// Phase 7: Comment model for recipe comments
+model Comment {
+  id        String   @id @default(cuid())
+  text      String   @db.Text
+  recipeId  String
+  userId    String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([recipeId])
+  @@index([userId])
+  @@map("comments")
 }

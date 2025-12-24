@@ -170,3 +170,56 @@ export async function wouldLeaveNoAdmins(
 
   return adminCount <= 1 // Would leave 0 admins
 }
+
+/**
+ * Check if user can edit a comment (owner or admin)
+ */
+export async function canEditComment(
+  userId: string,
+  commentUserId: string,
+  userRole: Role
+): Promise<boolean> {
+  // User can edit their own comment OR admin can edit any
+  return userId === commentUserId || userRole === 'ADMIN'
+}
+
+/**
+ * Check if user can delete a comment (owner or admin)
+ */
+export async function canDeleteComment(
+  userId: string,
+  commentUserId: string,
+  userRole: Role
+): Promise<boolean> {
+  // User can delete their own comment OR admin can delete any
+  return userId === commentUserId || userRole === 'ADMIN'
+}
+
+/**
+ * Require comment ownership or admin status
+ * Throws an error if unauthorized
+ */
+export async function requireCommentOwnership(
+  userId: string,
+  commentId: string,
+  userRole: Role
+) {
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: { userId: true, recipeId: true },
+  })
+
+  if (!comment) {
+    throw new Error('Comment not found')
+  }
+
+  // Verify user has access to the recipe's group
+  await requireRecipeAccess(userId, comment.recipeId)
+
+  // Verify ownership or admin status
+  if (comment.userId !== userId && userRole !== 'ADMIN') {
+    throw new Error('Forbidden: You can only edit your own comments')
+  }
+
+  return comment
+}

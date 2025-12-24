@@ -194,3 +194,39 @@ export interface GroupMembersResponse {
   members: GroupMember[]
   total: number
 }
+
+// Phase 7: Comment types
+export interface Comment {
+  id: string
+  text: string
+  recipeId: string
+  userId: string
+  user: {
+    id: string
+    name: string | null
+    email: string
+  }
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface CreateCommentRequest {
+  recipeId: string
+  text: string
+}
+
+export interface UpdateCommentRequest {
+  text: string
+}
+
+export interface CommentsResponse {
+  comments: Comment[]
+  total: number
+  page: number
+  totalPages: number
+}
+
+export interface UpdateGroupRequest {
+  name?: string
+  allowPowerUserEdit?: boolean
+}

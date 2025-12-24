@@ -9,6 +9,7 @@ import {
 } from '@/lib/authorization'
 import { RecipeDetail } from '@/components/recipes/RecipeDetail'
 import { RecipeDetailWrapper } from '@/components/recipes/RecipeDetailWrapper'
+import { CommentsSection } from '@/components/comments/CommentsSection'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import type { Recipe, Ingredient, RecipeStep } from '@/types'
 
@@ -121,6 +122,13 @@ export default async function RecipeDetailPage({
           canEdit={canEdit}
           canDelete={canDelete}
           initialIsFavorited={isFavorited}
+        />
+
+        {/* Phase 7: Comments Section */}
+        <CommentsSection
+          recipeId={id}
+          userId={session.user.id}
+          userRole={session.user.role}
         />
       </div>
     </main>

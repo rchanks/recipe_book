@@ -26,9 +26,9 @@ export default async function AdminPage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold mb-2">User Management</h1>
+            <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Manage group members and their roles
+              Manage your group and members
             </p>
           </div>
           <Link
@@ -39,8 +39,26 @@ export default async function AdminPage() {
           </Link>
         </div>
 
+        {/* Admin Options Grid */}
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Link
+            href="/admin/settings"
+            className="rounded-lg border border-gray-200 bg-white p-4 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
+          >
+            <h2 className="font-semibold text-gray-900 dark:text-white">
+              Group Settings
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Configure group name and member permissions
+            </p>
+          </Link>
+        </div>
+
         {/* Main content */}
         <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">
+            User Management
+          </h2>
           <MemberList />
         </div>
       </div>
