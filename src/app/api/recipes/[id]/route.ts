@@ -9,6 +9,7 @@ import {
   canDeleteRecipe,
   requireGroupMembership,
 } from '@/lib/authorization'
+import { storage } from '@/lib/storage'
 import type { Recipe, Ingredient, RecipeStep } from '@/types'
 
 /**
@@ -140,6 +141,7 @@ export async function PUT(
       cookTime,
       notes,
       familyStory,
+      photoUrl,
       categoryIds = [],
       tagIds = [],
     } = body
@@ -252,6 +254,7 @@ export async function PUT(
         cookTime: cookTime ? parseInt(cookTime) : null,
         notes: notes ? notes.trim() : null,
         familyStory: familyStory ? familyStory.trim() : null,
+        photoUrl: photoUrl || null,
         categories: {
           create: (categoryIds as string[]).map((catId) => ({
             categoryId: catId,
@@ -349,6 +352,21 @@ export async function DELETE(
         { error: 'Forbidden: Only admins can delete recipes' },
         { status: 403 }
       )
+    }
+
+    // Before deleting recipe, delete associated photo if exists
+    const recipe = await prisma.recipe.findUnique({
+      where: { id },
+      select: { photoUrl: true },
+    })
+
+    if (recipe?.photoUrl) {
+      try {
+        await storage.delete(recipe.photoUrl)
+      } catch (error) {
+        console.error('Failed to delete recipe photo:', error)
+        // Continue with recipe deletion even if photo delete fails
+      }
     }
 
     // Delete recipe

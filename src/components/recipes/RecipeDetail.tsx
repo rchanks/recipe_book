@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { RecipeMetadata } from './RecipeMetadata'
 import type { Recipe } from '@/types'
 
@@ -77,6 +78,20 @@ export function RecipeDetail({
             )}
           </div>
         </div>
+
+        {/* Photo Section */}
+        {recipe.photoUrl && (
+          <div className="relative mb-6 h-64 w-full overflow-hidden rounded-lg md:h-96">
+            <Image
+              src={recipe.photoUrl}
+              alt={recipe.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 768px"
+              priority
+            />
+          </div>
+        )}
 
         {/* Metadata */}
         <div className="mb-4">

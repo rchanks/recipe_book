@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { RecipeMetadata } from './RecipeMetadata'
 import type { Recipe } from '@/types'
 
@@ -39,9 +40,39 @@ export function RecipeCard({
   })
 
   return (
-    <div className="flex flex-col rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900">
+      {/* Photo Section */}
+      <Link href={`/recipes/${recipe.id}`} className="relative h-48 w-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+        {recipe.photoUrl ? (
+          <Image
+            src={recipe.photoUrl}
+            alt={recipe.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <svg
+              className="h-16 w-16 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+        )}
+      </Link>
+
+      {/* Card Content */}
       <div className="flex flex-1 flex-col p-4">
-        {/* Recipe Title and Link */}
+        {/* Recipe Title */}
         <div className="mb-3">
           <Link
             href={`/recipes/${recipe.id}`}

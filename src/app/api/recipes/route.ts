@@ -194,6 +194,7 @@ export async function POST(request: NextRequest) {
       cookTime,
       notes,
       familyStory,
+      photoUrl,
       categoryIds = [],
       tagIds = [],
     } = body
@@ -297,6 +298,7 @@ export async function POST(request: NextRequest) {
         cookTime: cookTime ? parseInt(cookTime) : null,
         notes: notes ? notes.trim() : null,
         familyStory: familyStory ? familyStory.trim() : null,
+        photoUrl: photoUrl || null,
         createdBy: session.user.id,
         groupId: session.user.groupId,
         categories: {

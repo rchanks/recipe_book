@@ -48,3 +48,7 @@ next-env.d.ts
 .env.db
 
 /src/generated/prisma
+
+# Uploaded files (Phase 8: Photos & Media)
+public/uploads/recipes/*
+!public/uploads/recipes/.gitkeep

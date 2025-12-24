@@ -22,6 +22,13 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
   const [availableCategories, setAvailableCategories] = useState<Category[]>([])
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
 
+  // Photo upload state
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(
+    recipe?.photoUrl || null
+  )
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+
   // Initialize form data
   const [formData, setFormData] = useState<RecipeFormData>({
     title: recipe?.title || '',
@@ -37,6 +44,7 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
     familyStory: recipe?.familyStory || '',
     categoryIds: recipe?.categories?.map((rc) => rc.categoryId) || [],
     tagIds: recipe?.tags?.map((rt) => rt.tagId) || [],
+    photoUrl: recipe?.photoUrl || undefined,
   })
 
   // Fetch categories and tags on mount
@@ -64,6 +72,71 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
 
     fetchCategoriesAndTags()
   }, [])
+
+  // Handle file selection for photos
+  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setError('Invalid file type. Only jpg, png, and webp are allowed.')
+      return
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File too large. Maximum size is 5MB.')
+      return
+    }
+
+    setError('')
+    setPhotoFile(file)
+
+    // Create preview
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Remove photo
+  function handleRemovePhoto() {
+    setPhotoFile(null)
+    setPhotoPreview(null)
+    setFormData((prev) => ({ ...prev, photoUrl: null }))
+  }
+
+  // Upload photo before submitting recipe
+  async function uploadPhoto(): Promise<string | null> {
+    if (!photoFile) return formData.photoUrl || null
+
+    setUploadingPhoto(true)
+    try {
+      const formDataObj = new FormData()
+      formDataObj.append('photo', photoFile)
+
+      const res = await fetch('/api/recipes/photos', {
+        method: 'POST',
+        body: formDataObj,
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to upload photo')
+      }
+
+      const { photoUrl } = await res.json()
+      return photoUrl
+    } catch (error) {
+      console.error('Photo upload error:', error)
+      throw error
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
 
   // Validation function
   function validateForm(): string | null {
@@ -104,6 +177,18 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
     try {
       setIsSubmitting(true)
 
+      // Upload photo if selected
+      let photoUrl: string | null = null
+      try {
+        photoUrl = await uploadPhoto()
+      } catch (photoErr) {
+        console.error('Photo upload failed:', photoErr)
+        setError(
+          photoErr instanceof Error ? photoErr.message : 'Failed to upload photo'
+        )
+        return
+      }
+
       // Prepare request body
       const requestBody = {
         title: formData.title.trim(),
@@ -122,6 +207,7 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
         cookTime: formData.cookTime ? parseInt(formData.cookTime) : null,
         notes: formData.notes ? formData.notes.trim() : null,
         familyStory: formData.familyStory ? formData.familyStory.trim() : null,
+        photoUrl,
         categoryIds: formData.categoryIds,
         tagIds: formData.tagIds,
       }
@@ -208,6 +294,62 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
           placeholder="A short description of the recipe..."
           className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
         />
+      </div>
+
+      {/* Recipe Photo */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+          Recipe Photo (Optional)
+        </label>
+
+        {photoPreview ? (
+          <div className="mt-2">
+            <img
+              src={photoPreview}
+              alt="Recipe preview"
+              className="h-48 w-full rounded-lg object-cover"
+            />
+            <button
+              type="button"
+              onClick={handleRemovePhoto}
+              disabled={uploadingPhoto || isSubmitting}
+              className="mt-2 text-sm text-red-600 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
+            >
+              Remove Photo
+            </button>
+          </div>
+        ) : (
+          <div className="mt-2">
+            <label className="flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed border-gray-300 p-6 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500">
+              <svg
+                className="h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                Click to upload or drag and drop
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-500">
+                JPG, PNG, or WebP (max 5MB)
+              </span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handlePhotoSelect}
+                disabled={uploadingPhoto || isSubmitting}
+                className="hidden"
+              />
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Categories */}

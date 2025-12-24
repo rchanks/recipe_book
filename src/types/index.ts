@@ -131,6 +131,7 @@ export interface RecipeFormData {
   familyStory: string
   categoryIds: string[]
   tagIds: string[]
+  photoUrl?: string | null
 }
 
 // Phase 6: Category and Tag types (prepare for future)
