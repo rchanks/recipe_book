@@ -11,25 +11,20 @@ export interface FilterState {
 }
 
 interface RecipeFiltersProps {
+  filters: FilterState
   onFilterChange: (filters: FilterState) => void
 }
 
 /**
- * Search and filter component for recipes
+ * Controlled filter component for recipes
+ * Parent owns the filter state and passes it down
  */
-export function RecipeFilters({ onFilterChange }: RecipeFiltersProps) {
-  const [filters, setFilters] = useState<FilterState>({
-    search: '',
-    categoryIds: [],
-    tagIds: [],
-    favoritesOnly: false,
-  })
-
+export function RecipeFilters({ filters, onFilterChange }: RecipeFiltersProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [loadingOptions, setLoadingOptions] = useState(true)
 
-  // Fetch available categories and tags
+  // Fetch available categories and tags (only once on mount)
   useEffect(() => {
     async function fetchOptions() {
       try {
@@ -57,11 +52,6 @@ export function RecipeFilters({ onFilterChange }: RecipeFiltersProps) {
     fetchOptions()
   }, [])
 
-  // Notify parent of filter changes
-  useEffect(() => {
-    onFilterChange(filters)
-  }, [filters, onFilterChange])
-
   // Check if any filters are active
   const hasActiveFilters =
     filters.search ||
@@ -71,7 +61,7 @@ export function RecipeFilters({ onFilterChange }: RecipeFiltersProps) {
 
   // Handle clearing all filters
   const handleClearFilters = () => {
-    setFilters({
+    onFilterChange({
       search: '',
       categoryIds: [],
       tagIds: [],
@@ -88,7 +78,7 @@ export function RecipeFilters({ onFilterChange }: RecipeFiltersProps) {
           placeholder="Search recipes by title or description..."
           value={filters.search}
           onChange={(e) =>
-            setFilters({ ...filters, search: e.target.value })
+            onFilterChange({ ...filters, search: e.target.value })
           }
           className="w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
         />
@@ -108,7 +98,7 @@ export function RecipeFilters({ onFilterChange }: RecipeFiltersProps) {
                 e.target.selectedOptions,
                 (option) => option.value
               )
-              setFilters({ ...filters, categoryIds: selected })
+              onFilterChange({ ...filters, categoryIds: selected })
             }}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             size={Math.min(5, categories.length)}
@@ -147,7 +137,7 @@ export function RecipeFilters({ onFilterChange }: RecipeFiltersProps) {
                   type="checkbox"
                   checked={filters.tagIds.includes(tag.id)}
                   onChange={(e) => {
-                    setFilters({
+                    onFilterChange({
                       ...filters,
                       tagIds: e.target.checked
                         ? [...filters.tagIds, tag.id]
@@ -169,7 +159,7 @@ export function RecipeFilters({ onFilterChange }: RecipeFiltersProps) {
           type="checkbox"
           checked={filters.favoritesOnly}
           onChange={(e) =>
-            setFilters({ ...filters, favoritesOnly: e.target.checked })
+            onFilterChange({ ...filters, favoritesOnly: e.target.checked })
           }
           className="mr-3 h-4 w-4"
         />

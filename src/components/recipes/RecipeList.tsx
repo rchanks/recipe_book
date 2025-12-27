@@ -132,6 +132,15 @@ export function RecipeList() {
     fetchRecipes()
   }, [page, filters, fetchRecipes])
 
+  // Memoize filter change handler to prevent render loops
+  const handleFilterChange = useCallback(
+    (newFilters: FilterState) => {
+      setFilters(newFilters)
+      setPage(1)
+    },
+    []
+  )
+
   // Handle recipe edit
   const handleEdit = (id: string) => {
     router.push(`/recipes/${id}/edit`)
@@ -234,12 +243,7 @@ export function RecipeList() {
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <RecipeFilters
-        onFilterChange={(newFilters) => {
-          setFilters(newFilters)
-          setPage(1)
-        }}
-      />
+      <RecipeFilters filters={filters} onFilterChange={handleFilterChange} />
 
       {/* No results message */}
       {recipes.length === 0 && Object.values(filters).some((v) => v) && (

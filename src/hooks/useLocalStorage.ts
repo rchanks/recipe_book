@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 /**
  * Hook for managing localStorage state with SSR safety
- * Handles hydration mismatch by defaulting to initial value until mounted
+ * Handles hydration mismatch by not updating state until fully mounted
  * Includes error handling for quota exceeded and privacy mode
  */
 export function useLocalStorage<T>(
@@ -12,20 +12,27 @@ export function useLocalStorage<T>(
   initialValue: T
 ): [T, (value: T) => void] {
   const [storedValue, setStoredValue] = useState<T>(initialValue)
-  const [mounted, setMounted] = useState(false)
+  const isMountedRef = useRef(false)
 
-  // Load value from localStorage on mount
+  // Load value from localStorage ONLY after mount is complete
+  // This prevents hydration mismatches
   useEffect(() => {
+    // Only run once on mount
+    if (isMountedRef.current) return
+    isMountedRef.current = true
+
     try {
-      setMounted(true)
       const item = window.localStorage.getItem(key)
       if (item) {
-        setStoredValue(JSON.parse(item))
+        const parsed = JSON.parse(item)
+        // Only update if different from initial value to avoid unnecessary re-renders
+        if (JSON.stringify(parsed) !== JSON.stringify(initialValue)) {
+          setStoredValue(parsed)
+        }
       }
     } catch (error) {
       console.error(`Error reading localStorage key "${key}":`, error)
-      // Fall back to initial value on error
-      setStoredValue(initialValue)
+      // Keep initial value on error
     }
   }, [key, initialValue])
 
@@ -33,7 +40,8 @@ export function useLocalStorage<T>(
   const setValue = (value: T) => {
     try {
       setStoredValue(value)
-      if (mounted) {
+      // Only write to localStorage after mount
+      if (isMountedRef.current) {
         window.localStorage.setItem(key, JSON.stringify(value))
       }
     } catch (error) {
