@@ -10,7 +10,6 @@ import {
 import { RecipeDetail } from '@/components/recipes/RecipeDetail'
 import { RecipeDetailWrapper } from '@/components/recipes/RecipeDetailWrapper'
 import { CommentsSection } from '@/components/comments/CommentsSection'
-import { LogoutButton } from '@/components/auth/LogoutButton'
 import type { Recipe, Ingredient, RecipeStep } from '@/types'
 
 /**
@@ -103,15 +102,12 @@ export default async function RecipeDetailPage({
       {/* Header with navigation */}
       <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/recipes"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-            >
-              ← Back to Recipes
-            </Link>
-          </div>
-          <LogoutButton />
+          <Link
+            href="/recipes"
+            className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+          >
+            ← Back to Recipes
+          </Link>
         </div>
       </header>
 
