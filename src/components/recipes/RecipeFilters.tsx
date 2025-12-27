@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useDebounce } from '@/hooks/useDebounce'
 import type { Category, Tag } from '@/types'
 
 export interface FilterState {
@@ -23,6 +24,22 @@ export function RecipeFilters({ filters, onFilterChange }: RecipeFiltersProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [loadingOptions, setLoadingOptions] = useState(true)
+  // Local state for search input (responsive to typing)
+  const [localSearch, setLocalSearch] = useState(filters.search)
+  // Debounce the search to avoid excessive re-renders
+  const debouncedSearch = useDebounce(localSearch, 300)
+
+  // Update parent when debounced search changes
+  useEffect(() => {
+    if (debouncedSearch !== filters.search) {
+      onFilterChange({ ...filters, search: debouncedSearch })
+    }
+  }, [debouncedSearch, filters, onFilterChange])
+
+  // Update local search when filters prop changes (sync from parent)
+  useEffect(() => {
+    setLocalSearch(filters.search)
+  }, [filters.search])
 
   // Fetch available categories and tags (only once on mount)
   useEffect(() => {
@@ -76,10 +93,8 @@ export function RecipeFilters({ filters, onFilterChange }: RecipeFiltersProps) {
         <input
           type="text"
           placeholder="Search recipes by title or description..."
-          value={filters.search}
-          onChange={(e) =>
-            onFilterChange({ ...filters, search: e.target.value })
-          }
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
           className="w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
         />
       </div>
