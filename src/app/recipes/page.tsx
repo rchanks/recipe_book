@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { hasPermission } from '@/lib/authorization'
+import { RecipePageHeader } from '@/components/recipes/RecipePageHeader'
 import { RecipeList } from '@/components/recipes/RecipeList'
-import { LogoutButton } from '@/components/auth/LogoutButton'
 
 /**
  * Recipe list page - displays all recipes for the user's group
@@ -26,44 +25,11 @@ export default async function RecipesPage() {
 
   return (
     <main className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-950">
-      {/* Header */}
-      <div className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Recipes
-              </h1>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">
-                {session.user.groupSlug && (
-                  <>
-                    <span>Your family's recipe collection</span>
-                  </>
-                )}
-              </p>
-            </div>
-            <LogoutButton />
-          </div>
-          <div className="flex gap-3">
-            {canCreate && (
-              <Link
-                href="/recipes/new"
-                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-              >
-                + Add Recipe
-              </Link>
-            )}
-            {session.user.role === 'ADMIN' && (
-              <Link
-                href="/admin"
-                className="rounded bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-800"
-              >
-                👥 Manage Users
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Header with menu */}
+      <RecipePageHeader
+        userRole={session.user.role}
+        canCreate={canCreate}
+      />
 
       {/* Content */}
       <div className="flex-1">

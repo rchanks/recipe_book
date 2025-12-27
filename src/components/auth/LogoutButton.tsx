@@ -4,11 +4,17 @@ import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+interface LogoutButtonProps {
+  className?: string
+  onClick?: () => void
+}
+
 /**
  * Logout Button Component
  * Handles user logout
+ * Can be used as a standalone button or in menus with custom styling
  */
-export function LogoutButton() {
+export function LogoutButton({ className, onClick }: LogoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -29,11 +35,16 @@ export function LogoutButton() {
     }
   }
 
+  const defaultClassName = 'rounded-lg bg-gray-200 px-4 py-2 font-medium transition-colors hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-800 dark:hover:bg-gray-700'
+
   return (
     <button
-      onClick={handleLogout}
+      onClick={() => {
+        onClick?.()
+        handleLogout()
+      }}
       disabled={isLoading}
-      className="rounded-lg bg-gray-200 px-4 py-2 font-medium transition-colors hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-800 dark:hover:bg-gray-700"
+      className={className || defaultClassName}
     >
       {isLoading ? 'Logging out...' : 'Log Out'}
     </button>
