@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useDebounce } from '@/hooks/useDebounce'
 import type { Category, Tag } from '@/types'
 
@@ -21,6 +21,7 @@ interface RecipeFiltersProps {
  * Parent owns the filter state and passes it down
  */
 export function RecipeFilters({ filters, onFilterChange }: RecipeFiltersProps) {
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [loadingOptions, setLoadingOptions] = useState(true)
@@ -40,6 +41,18 @@ export function RecipeFilters({ filters, onFilterChange }: RecipeFiltersProps) {
   useEffect(() => {
     setLocalSearch(filters.search)
   }, [filters.search])
+
+  // Restore focus to search input after filter updates
+  useEffect(() => {
+    // Keep focus in the search input when user has typed something
+    if (
+      document.activeElement !== searchInputRef.current &&
+      localSearch !== '' &&
+      localSearch === debouncedSearch
+    ) {
+      searchInputRef.current?.focus()
+    }
+  }, [debouncedSearch, localSearch])
 
   // Fetch available categories and tags (only once on mount)
   useEffect(() => {
@@ -91,6 +104,7 @@ export function RecipeFilters({ filters, onFilterChange }: RecipeFiltersProps) {
       {/* Search Bar */}
       <div>
         <input
+          ref={searchInputRef}
           type="text"
           placeholder="Search recipes by title or description..."
           value={localSearch}
