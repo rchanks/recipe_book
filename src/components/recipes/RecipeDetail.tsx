@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { RecipeMetadata } from './RecipeMetadata'
+import { RecipeAdminMenu } from './RecipeAdminMenu'
+import { DeleteConfirmationModal } from './DeleteConfirmationModal'
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation'
 import { HeartIcon } from '@/components/ui/icons/HeartIcon'
 import { LightbulbIcon } from '@/components/ui/icons/LightbulbIcon'
@@ -32,6 +34,7 @@ export function RecipeDetail({
   const router = useRouter()
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [isToggling, setIsToggling] = React.useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
   const [checkedIngredients, setCheckedIngredients] = React.useState<
     Set<number>
   >(new Set())
@@ -87,15 +90,7 @@ export function RecipeDetail({
     router.push(`/recipes/${recipe.id}/edit`)
   }
 
-  const handleDelete = async () => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this recipe? This cannot be undone.'
-      )
-    ) {
-      return
-    }
-
+  const handleDeleteConfirm = async () => {
     try {
       setIsDeleting(true)
       const response = await fetch(`/api/recipes/${recipe.id}`, {
@@ -111,7 +106,12 @@ export function RecipeDetail({
       console.error('Error deleting recipe:', err)
       alert(err instanceof Error ? err.message : 'Failed to delete recipe')
       setIsDeleting(false)
+      setShowDeleteConfirm(false)
     }
+  }
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true)
   }
 
   const totalTime =
@@ -132,6 +132,16 @@ export function RecipeDetail({
               </p>
             )}
           </div>
+          {/* Admin menu */}
+          {(canEdit || canDelete) && (
+            <RecipeAdminMenu
+              canEdit={canEdit}
+              canDelete={canDelete}
+              onEdit={handleEdit}
+              onDelete={handleDeleteClick}
+              isDeleting={isDeleting}
+            />
+          )}
         </div>
 
         {/* Photo Section */}
@@ -197,58 +207,39 @@ export function RecipeDetail({
           </p>
         </div>
 
-        {/* Action buttons */}
-        {(canEdit || canDelete || onToggleFavorite) && (
-          <div className="mt-4 flex gap-2">
-            {canEdit && (
-              <button
-                onClick={handleEdit}
-                className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 transform hover:scale-[1.02] transition-all motion-reduce:transform-none motion-reduce:transition-none dark:bg-blue-700 dark:hover:bg-blue-800"
-              >
-                Edit Recipe
-              </button>
-            )}
-            {canDelete && (
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50 transform hover:scale-[1.02] transition-all motion-reduce:transform-none motion-reduce:transition-none dark:bg-red-700 dark:hover:bg-red-800"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete Recipe'}
-              </button>
-            )}
-            {onToggleFavorite && (
-              <button
-                onClick={async () => {
-                  setIsToggling(true)
-                  try {
-                    await onToggleFavorite()
-                  } finally {
-                    setIsToggling(false)
-                  }
-                }}
-                disabled={isToggling}
-                className={`rounded px-4 py-2 font-medium transition-all flex items-center gap-2 transform hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none ${
-                  isFavorited
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-200 dark:hover:bg-red-900/50'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-                } ${isToggling ? 'cursor-not-allowed opacity-75' : ''}`}
-              >
-                {isToggling ? (
-                  <LoadingSpinner className="h-5 w-5" srText="Toggling favorite..." />
-                ) : isFavorited ? (
-                  <>
-                    <HeartIcon variant="filled" className="h-5 w-5 text-red-600" />
-                    Favorited
-                  </>
-                ) : (
-                  <>
-                    <HeartIcon variant="outline" className="h-5 w-5" />
-                    Add to Favorites
-                  </>
-                )}
-              </button>
-            )}
+        {/* Favorite button */}
+        {onToggleFavorite && (
+          <div className="mt-4">
+            <button
+              onClick={async () => {
+                setIsToggling(true)
+                try {
+                  await onToggleFavorite()
+                } finally {
+                  setIsToggling(false)
+                }
+              }}
+              disabled={isToggling}
+              className={`rounded px-4 py-2 font-medium transition-all flex items-center gap-2 transform hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none ${
+                isFavorited
+                  ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-200 dark:hover:bg-red-900/50'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              } ${isToggling ? 'cursor-not-allowed opacity-75' : ''}`}
+            >
+              {isToggling ? (
+                <LoadingSpinner className="h-5 w-5" srText="Toggling favorite..." />
+              ) : isFavorited ? (
+                <>
+                  <HeartIcon variant="filled" className="h-5 w-5 text-red-600" />
+                  Favorited
+                </>
+              ) : (
+                <>
+                  <HeartIcon variant="outline" className="h-5 w-5" />
+                  Add to Favorites
+                </>
+              )}
+            </button>
           </div>
         )}
       </div>
@@ -428,6 +419,15 @@ export function RecipeDetail({
           ← Back to recipes
         </Link>
       </div>
+
+      {/* Delete confirmation modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteConfirm}
+        recipeName={recipe.title}
+        isDeleting={isDeleting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   )
 }
