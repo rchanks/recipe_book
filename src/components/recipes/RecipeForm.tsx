@@ -21,6 +21,8 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
   const [error, setError] = useState('')
   const [availableCategories, setAvailableCategories] = useState<Category[]>([])
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(true)
+  const [metadataError, setMetadataError] = useState<string | null>(null)
 
   // Photo upload state
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -51,10 +53,17 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
   useEffect(() => {
     async function fetchCategoriesAndTags() {
       try {
+        setIsLoadingMetadata(true)
+        setMetadataError(null)
+
         const [catRes, tagRes] = await Promise.all([
           fetch('/api/categories'),
           fetch('/api/tags'),
         ])
+
+        if (!catRes.ok || !tagRes.ok) {
+          setMetadataError('Failed to load categories and tags')
+        }
 
         if (catRes.ok) {
           const data = await catRes.json()
@@ -67,6 +76,9 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
         }
       } catch (err) {
         console.error('Error fetching categories and tags:', err)
+        setMetadataError('Could not connect to server while loading categories and tags')
+      } finally {
+        setIsLoadingMetadata(false)
       }
     }
 
@@ -351,6 +363,27 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
           </div>
         )}
       </div>
+
+      {/* Loading state for categories and tags */}
+      {isLoadingMetadata && (
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Loading categories and tags...
+        </div>
+      )}
+
+      {/* Error state for metadata fetch */}
+      {metadataError && (
+        <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+          {metadataError}
+        </div>
+      )}
+
+      {/* Empty state if no categories or tags exist */}
+      {!isLoadingMetadata && availableCategories.length === 0 && availableTags.length === 0 && (
+        <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+          <p>No categories or tags have been created yet. Contact a group admin to create categories and tags.</p>
+        </div>
+      )}
 
       {/* Categories */}
       {availableCategories.length > 0 && (
