@@ -114,7 +114,7 @@ export function RecipeDetail({
     (recipe.prepTime || 0) + (recipe.cookTime || 0)
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Header with title and actions */}
       <div className="border-b border-gray-200 pb-6 dark:border-gray-700">
         <div className="mb-4 flex items-start justify-between gap-4">
@@ -260,7 +260,7 @@ export function RecipeDetail({
             {recipe.ingredients.map((ingredient, idx) => (
             <div
               key={idx}
-              className="flex items-start gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-900"
+              className="flex items-start gap-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-900"
             >
               <input
                 type="checkbox"
@@ -277,19 +277,19 @@ export function RecipeDetail({
                     : ''
                 }`}
               >
-                <p className="text-base text-gray-900 dark:text-white">
-                  <span className="font-semibold">
+                <p className="recipe-base-text text-gray-900 dark:text-white">
+                  <span className="recipe-ingredient-quantity">
                     {ingredient.quantity}
                   </span>
                   {ingredient.unit && (
-                    <span className="ml-1 font-semibold">
+                    <span className="recipe-ingredient-quantity ml-1">
                       {ingredient.unit}
                     </span>
                   )}
-                  <span className="ml-2">{ingredient.name}</span>
+                  <span className="recipe-ingredient-name ml-2">{ingredient.name}</span>
                 </p>
                 {ingredient.note && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 recipe-base-text">
                     {ingredient.note}
                   </p>
                 )}
@@ -357,7 +357,7 @@ export function RecipeDetail({
       {/* Total time info */}
       {totalTime > 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900">
-          <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+          <p className="recipe-base-text font-semibold text-amber-900 dark:text-amber-100">
             Total time: {totalTime} minutes
           </p>
         </div>
@@ -365,12 +365,12 @@ export function RecipeDetail({
 
       {/* Notes section */}
       {recipe.notes && (
-        <section className="space-y-4">
+        <section className="recipe-section space-y-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Notes & Tips
           </h2>
           <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-            <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+            <p className="recipe-base-text whitespace-pre-wrap text-gray-700 dark:text-gray-300">
               {recipe.notes}
             </p>
           </div>
@@ -379,12 +379,12 @@ export function RecipeDetail({
 
       {/* Family story section */}
       {recipe.familyStory && (
-        <section className="space-y-4">
+        <section className="recipe-section space-y-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Family Story
           </h2>
           <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-700 dark:bg-purple-900">
-            <p className="whitespace-pre-wrap text-purple-900 dark:text-purple-100">
+            <p className="recipe-base-text whitespace-pre-wrap text-purple-900 dark:text-purple-100">
               {recipe.familyStory}
             </p>
           </div>

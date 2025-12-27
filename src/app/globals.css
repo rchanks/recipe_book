@@ -94,9 +94,46 @@
     line-height: 1.8;
   }
 
+  /* Recipe typography classes for kitchen readability */
+
+  /* Base text for recipe content - responsive sizing */
+  .recipe-base-text {
+    font-size: 1.125rem; /* 18px - Mobile default */
+    line-height: 1.6;
+  }
+
+  @media (min-width: 1024px) {
+    .recipe-base-text {
+      font-size: 1.25rem; /* 20px - Desktop larger */
+      line-height: 1.7;
+    }
+  }
+
   /* Improved readability for instructions */
   .recipe-instruction {
     line-height: 1.8;
+    font-size: 1.125rem;
+  }
+
+  @media (min-width: 1024px) {
+    .recipe-instruction {
+      font-size: 1.25rem;
+    }
+  }
+
+  /* Ingredient quantity styling - semi-bold */
+  .recipe-ingredient-quantity {
+    font-weight: 500;
+  }
+
+  /* Ingredient name styling - semi-bold */
+  .recipe-ingredient-name {
+    font-weight: 600;
+  }
+
+  /* Section margins for breathing room */
+  .recipe-section {
+    margin-bottom: 3rem; /* mb-12 equivalent */
   }
 
   /* Screen reader only text */
