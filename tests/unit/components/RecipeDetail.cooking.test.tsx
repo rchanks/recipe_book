@@ -209,8 +209,8 @@ describe('RecipeDetail - Cooking Features', () => {
       fireEvent.click(firstStep!)
 
       await waitFor(() => {
-        expect(firstStep).toHaveClass('bg-blue-100')
-        expect(firstStep).toHaveClass('border-blue-500')
+        expect(firstStep).toHaveClass('bg-blue-200')
+        expect(firstStep).toHaveClass('border-blue-600')
       })
     })
 
@@ -232,14 +232,14 @@ describe('RecipeDetail - Cooking Features', () => {
       fireEvent.click(stepButtons[0])
 
       await waitFor(() => {
-        expect(stepButtons[0]).toHaveClass('bg-blue-100')
+        expect(stepButtons[0]).toHaveClass('bg-blue-200')
       })
 
       fireEvent.click(stepButtons[1])
 
       await waitFor(() => {
-        expect(stepButtons[0]).not.toHaveClass('bg-blue-100')
-        expect(stepButtons[1]).toHaveClass('bg-blue-100')
+        expect(stepButtons[0]).not.toHaveClass('bg-blue-200')
+        expect(stepButtons[1]).toHaveClass('bg-blue-200')
       })
     })
 
@@ -554,7 +554,7 @@ describe('RecipeDetail - Cooking Features', () => {
       fireEvent.keyDown(stepButtons[0], { key: 'Enter' })
 
       await waitFor(() => {
-        expect(stepButtons[0]).toHaveClass('bg-blue-100')
+        expect(stepButtons[0]).toHaveClass('bg-blue-200')
       })
     })
 
@@ -575,7 +575,7 @@ describe('RecipeDetail - Cooking Features', () => {
       fireEvent.keyDown(stepButtons[0], { key: ' ' })
 
       await waitFor(() => {
-        expect(stepButtons[0]).toHaveClass('bg-blue-100')
+        expect(stepButtons[0]).toHaveClass('bg-blue-200')
       })
     })
   })

@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { RecipeMetadata } from './RecipeMetadata'
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation'
+import { HeartIcon } from '@/components/ui/icons/HeartIcon'
+import { LightbulbIcon } from '@/components/ui/icons/LightbulbIcon'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import type { Recipe } from '@/types'
 
 interface RecipeDetailProps {
@@ -28,6 +31,7 @@ export function RecipeDetail({
 }: RecipeDetailProps) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = React.useState(false)
+  const [isToggling, setIsToggling] = React.useState(false)
   const [checkedIngredients, setCheckedIngredients] = React.useState<
     Set<number>
   >(new Set())
@@ -199,7 +203,7 @@ export function RecipeDetail({
             {canEdit && (
               <button
                 onClick={handleEdit}
-                className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+                className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 transform hover:scale-[1.02] transition-all motion-reduce:transform-none motion-reduce:transition-none dark:bg-blue-700 dark:hover:bg-blue-800"
               >
                 Edit Recipe
               </button>
@@ -208,21 +212,41 @@ export function RecipeDetail({
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50 dark:bg-red-700 dark:hover:bg-red-800"
+                className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50 transform hover:scale-[1.02] transition-all motion-reduce:transform-none motion-reduce:transition-none dark:bg-red-700 dark:hover:bg-red-800"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Recipe'}
               </button>
             )}
             {onToggleFavorite && (
               <button
-                onClick={onToggleFavorite}
-                className={`rounded px-4 py-2 font-medium transition ${
+                onClick={async () => {
+                  setIsToggling(true)
+                  try {
+                    await onToggleFavorite()
+                  } finally {
+                    setIsToggling(false)
+                  }
+                }}
+                disabled={isToggling}
+                className={`rounded px-4 py-2 font-medium transition-all flex items-center gap-2 transform hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none ${
                   isFavorited
                     ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-200 dark:hover:bg-red-900/50'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-                }`}
+                } ${isToggling ? 'cursor-not-allowed opacity-75' : ''}`}
               >
-                {isFavorited ? '❤️ Favorited' : '🤍 Add to Favorites'}
+                {isToggling ? (
+                  <LoadingSpinner className="h-5 w-5" srText="Toggling favorite..." />
+                ) : isFavorited ? (
+                  <>
+                    <HeartIcon variant="filled" className="h-5 w-5 text-red-600" />
+                    Favorited
+                  </>
+                ) : (
+                  <>
+                    <HeartIcon variant="outline" className="h-5 w-5" />
+                    Add to Favorites
+                  </>
+                )}
               </button>
             )}
           </div>
@@ -260,7 +284,7 @@ export function RecipeDetail({
             {recipe.ingredients.map((ingredient, idx) => (
             <div
               key={idx}
-              className="flex items-start gap-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-900"
+              className="flex items-start gap-3 rounded-lg bg-gray-50 p-4 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800/50 transition-colors dark:transition-colors"
             >
               <input
                 type="checkbox"
@@ -328,8 +352,8 @@ export function RecipeDetail({
               }}
               className={`flex gap-4 rounded-lg p-4 cursor-pointer transition-all ${
                 step.stepNumber === highlightedStep
-                  ? 'bg-blue-100 border-2 border-blue-500 shadow-lg dark:bg-blue-900/50 dark:border-blue-400'
-                  : 'bg-blue-50 border-2 border-transparent hover:border-blue-200 dark:bg-blue-900 dark:hover:border-blue-700'
+                  ? 'bg-blue-200 border-2 border-blue-600 ring-2 ring-blue-400/20 shadow-lg dark:bg-blue-900/60 dark:border-blue-400'
+                  : 'bg-blue-50 border-2 border-transparent hover:border-blue-300 hover:bg-blue-100 dark:bg-blue-900 dark:hover:border-blue-700'
               } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-950`}
               aria-label={`Step ${step.stepNumber}${
                 step.stepNumber === highlightedStep ? ', currently highlighted' : ''
@@ -344,8 +368,12 @@ export function RecipeDetail({
                   {step.instruction}
                 </p>
                 {step.notes && (
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                    💡 {step.notes}
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 flex items-start gap-2">
+                    <LightbulbIcon
+                      className="h-4 w-4 mt-0.5 flex-shrink-0 text-yellow-600 dark:text-yellow-400"
+                      aria-hidden={true}
+                    />
+                    <span>{step.notes}</span>
                   </p>
                 )}
               </div>
