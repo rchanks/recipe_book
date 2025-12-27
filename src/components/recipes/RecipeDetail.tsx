@@ -254,9 +254,9 @@ export function RecipeDetail({
           </button>
         </div>
 
-        {/* Collapsible content */}
+        {/* Collapsible content with scrolling on mobile */}
         {!stickyPanelCollapsed && (
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-48 overflow-y-auto lg:max-h-none lg:overflow-y-visible">
             {recipe.ingredients.map((ingredient, idx) => (
             <div
               key={idx}
