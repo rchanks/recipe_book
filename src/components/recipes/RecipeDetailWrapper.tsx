@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { RecipeDetail } from './RecipeDetail'
+import { CookingControls } from './CookingControls'
 import type { Recipe } from '@/types'
 
 interface RecipeDetailWrapperProps {
@@ -22,6 +23,7 @@ export function RecipeDetailWrapper({
 }: RecipeDetailWrapperProps) {
   const [isFavorited, setIsFavorited] = useState(initialIsFavorited)
   const [isToggling, setIsToggling] = useState(false)
+  const [largeText, setLargeText] = useState(false)
 
   const handleToggleFavorite = async () => {
     try {
@@ -43,12 +45,15 @@ export function RecipeDetailWrapper({
   }
 
   return (
-    <RecipeDetail
-      recipe={recipe}
-      canEdit={canEdit}
-      canDelete={canDelete}
-      isFavorited={isFavorited}
-      onToggleFavorite={isToggling ? undefined : handleToggleFavorite}
-    />
+    <div data-large-text={largeText ? 'true' : 'false'}>
+      <CookingControls onLargeTextChange={setLargeText} />
+      <RecipeDetail
+        recipe={recipe}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        isFavorited={isFavorited}
+        onToggleFavorite={isToggling ? undefined : handleToggleFavorite}
+      />
+    </div>
   )
 }

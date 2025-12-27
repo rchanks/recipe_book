@@ -8,7 +8,14 @@ const config: Config = {
   ],
   darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      ringWidth: {
+        '3': '3px',
+      },
+      ringOffsetWidth: {
+        '3': '3px',
+      },
+    },
   },
   plugins: [],
 }

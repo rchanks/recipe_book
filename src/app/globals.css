@@ -8,4 +8,142 @@
   html {
     @apply scroll-smooth;
   }
+
+  /* Custom focus indicators - visible and high contrast */
+  *:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .dark *:focus-visible {
+    outline-color: #60a5fa;
+  }
+
+  /* Remove default outline for mouse users, keep for keyboard */
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Enhanced focus for buttons and links */
+  button:focus-visible,
+  a:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .dark button:focus-visible,
+  .dark a:focus-visible {
+    outline-color: #60a5fa;
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Smooth transitions for users who don't prefer reduced motion */
+  @media (prefers-reduced-motion: no-preference) {
+    .transition-all,
+    .transition-opacity,
+    .transition {
+      transition-duration: 150ms;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  /* Large text mode for kitchen readability */
+  [data-large-text="true"] .text-xs {
+    font-size: 0.875rem;
+  }
+
+  [data-large-text="true"] .text-sm {
+    font-size: 1rem;
+  }
+
+  [data-large-text="true"] .text-base {
+    font-size: 1.25rem;
+  }
+
+  [data-large-text="true"] .text-lg {
+    font-size: 1.5rem;
+  }
+
+  [data-large-text="true"] .text-xl {
+    font-size: 1.75rem;
+  }
+
+  [data-large-text="true"] .text-2xl {
+    font-size: 2rem;
+  }
+
+  [data-large-text="true"] .text-4xl {
+    font-size: 2.75rem;
+  }
+
+  /* Improved line height in large text mode */
+  [data-large-text="true"] p,
+  [data-large-text="true"] li {
+    line-height: 1.8;
+  }
+
+  /* Improved readability for instructions */
+  .recipe-instruction {
+    line-height: 1.8;
+  }
+
+  /* Screen reader only text */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Focus visible for sr-only elements */
+  .sr-only:focus-visible {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* Minimum touch target size (44x44px) for accessibility */
+  button,
+  input[type="checkbox"],
+  input[type="radio"],
+  a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Enhanced focus ring for form elements */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .dark input:focus-visible,
+  .dark textarea:focus-visible,
+  .dark select:focus-visible {
+    outline-color: #60a5fa;
+  }
 }

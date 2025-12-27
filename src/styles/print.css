@@ -1,0 +1,178 @@
+/* Print styles for recipe printing */
+@media print {
+  /* Hide navigation, buttons, and interactive elements */
+  header,
+  nav,
+  button,
+  .no-print,
+  [aria-label="Toggle theme"],
+  .comments-section,
+  .action-buttons {
+    display: none !important;
+  }
+
+  /* Force light mode for printing */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+
+  /* Recipe title */
+  h1 {
+    font-size: 22pt;
+    font-weight: bold;
+    margin-bottom: 12pt;
+    page-break-after: avoid;
+    color: black !important;
+  }
+
+  /* Section headings */
+  h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin-top: 18pt;
+    margin-bottom: 12pt;
+    page-break-after: avoid;
+    color: black !important;
+  }
+
+  /* Recipe description and metadata */
+  .recipe-description,
+  .recipe-metadata {
+    margin-bottom: 12pt;
+    page-break-inside: avoid;
+  }
+
+  /* Photo - small size to save ink */
+  img {
+    max-height: 180px;
+    max-width: 100%;
+    page-break-inside: avoid;
+    border: 1pt solid #ccc;
+  }
+
+  /* Ingredients list */
+  .ingredient-item,
+  section.space-y-4 > div > div {
+    background: white !important;
+    border: 1pt solid #ddd;
+    padding: 6pt;
+    margin-bottom: 4pt;
+    page-break-inside: avoid;
+    color: black !important;
+  }
+
+  /* Ingredient quantity and unit */
+  .ingredient-item span,
+  section.space-y-4 > div > div span {
+    color: black !important;
+  }
+
+  /* Checkboxes - render as empty boxes for manual checking */
+  input[type="checkbox"] {
+    border: 1.5pt solid black;
+    background: white !important;
+    width: 14px;
+    height: 14px;
+    -webkit-appearance: none;
+    appearance: none;
+    margin-right: 6pt;
+  }
+
+  /* Instructions section */
+  .instruction-step,
+  section.space-y-4 > div > div {
+    background: white !important;
+    border: 1pt solid #ddd;
+    padding: 8pt;
+    margin-bottom: 8pt;
+    page-break-inside: avoid;
+    color: black !important;
+  }
+
+  /* Step numbers */
+  .step-number,
+  section.space-y-4 > div > div > div {
+    background: white !important;
+    color: black !important;
+    border: 1.5pt solid black;
+  }
+
+  /* Notes and family story - light gray background */
+  .recipe-notes,
+  .family-story,
+  section.space-y-4 > div {
+    border: 1pt solid #999;
+    padding: 8pt;
+    background: white !important;
+    page-break-inside: avoid;
+    color: black !important;
+  }
+
+  /* Remove all shadows, borders, and colors */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  /* Keep essential borders for structure */
+  section {
+    border-top: 1pt solid #ddd;
+    padding-top: 12pt;
+  }
+
+  /* Page break controls */
+  .ingredients-section {
+    page-break-after: auto;
+  }
+
+  .instructions-section {
+    page-break-before: auto;
+  }
+
+  /* Total time info */
+  p {
+    widows: 3;
+    orphans: 3;
+  }
+
+  /* Links show URL in print */
+  a[href]:not([href^="/"]):not([href^="#"]):after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: black;
+  }
+
+  /* Links that are internal don't show URL */
+  a[href^="/"]:after,
+  a[href^="#"]:after {
+    content: "";
+  }
+
+  /* Back link shouldn't print */
+  a {
+    text-decoration: none;
+    color: black;
+  }
+
+  /* Back to recipes link - hide */
+  [href="/recipes"] {
+    display: none !important;
+  }
+
+  /* Ensure text is readable */
+  p {
+    color: black !important;
+  }
+
+  /* Override dark mode colors */
+  .dark,
+  .dark * {
+    background-color: transparent !important;
+    color: black !important;
+  }
+}

@@ -24,19 +24,28 @@ export function RecipeMetadata({
     <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
       {servings && (
         <div className="flex items-center gap-2">
-          <span className="font-semibold">👥</span>
+          <span className="font-semibold" aria-hidden="true">
+            👥
+          </span>
+          <span className="sr-only">Servings:</span>
           <span>{servings} serving{servings !== 1 ? 's' : ''}</span>
         </div>
       )}
       {prepTime && (
         <div className="flex items-center gap-2">
-          <span className="font-semibold">⏱️</span>
+          <span className="font-semibold" aria-hidden="true">
+            ⏱️
+          </span>
+          <span className="sr-only">Prep time:</span>
           <span>Prep: {prepTime} min</span>
         </div>
       )}
       {cookTime && (
         <div className="flex items-center gap-2">
-          <span className="font-semibold">🔥</span>
+          <span className="font-semibold" aria-hidden="true">
+            🔥
+          </span>
+          <span className="sr-only">Cook time:</span>
           <span>Cook: {cookTime} min</span>
         </div>
       )}

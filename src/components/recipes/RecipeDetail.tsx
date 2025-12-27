@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { RecipeMetadata } from './RecipeMetadata'
+import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation'
 import type { Recipe } from '@/types'
 
 interface RecipeDetailProps {
@@ -27,6 +28,56 @@ export function RecipeDetail({
 }: RecipeDetailProps) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = React.useState(false)
+  const [checkedIngredients, setCheckedIngredients] = React.useState<
+    Set<number>
+  >(new Set())
+  const [highlightedStep, setHighlightedStep] = React.useState<number | null>(
+    null
+  )
+  const [stickyPanelCollapsed, setStickyPanelCollapsed] =
+    React.useState<boolean>(false)
+
+  // Integrate keyboard navigation for steps
+  useKeyboardNavigation(recipe.steps.length, highlightedStep, setHighlightedStep)
+
+  /**
+   * Toggle ingredient checked state and announce to screen readers
+   */
+  const toggleIngredient = (index: number) => {
+    const newChecked = new Set(checkedIngredients)
+    const ingredient = recipe.ingredients[index]
+
+    if (newChecked.has(index)) {
+      newChecked.delete(index)
+      announceToScreenReader(
+        `Unchecked: ${ingredient.quantity} ${ingredient.unit || ''} ${ingredient.name}`.trim()
+      )
+    } else {
+      newChecked.add(index)
+      announceToScreenReader(
+        `Checked: ${ingredient.quantity} ${ingredient.unit || ''} ${ingredient.name}`.trim()
+      )
+    }
+
+    setCheckedIngredients(newChecked)
+  }
+
+  /**
+   * Announce message to screen readers via live region
+   */
+  const announceToScreenReader = (message: string) => {
+    const announcement = document.createElement('div')
+    announcement.setAttribute('role', 'status')
+    announcement.setAttribute('aria-live', 'polite')
+    announcement.className = 'sr-only'
+    announcement.textContent = message
+
+    document.body.appendChild(announcement)
+
+    setTimeout(() => {
+      document.body.removeChild(announcement)
+    }, 1000)
+  }
 
   const handleEdit = () => {
     router.push(`/recipes/${recipe.id}/edit`)
@@ -179,23 +230,53 @@ export function RecipeDetail({
       </div>
 
       {/* Ingredients section */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Ingredients
-        </h2>
-        <div className="space-y-2">
-          {recipe.ingredients.map((ingredient, idx) => (
+      <section
+        className={`space-y-4 ${
+          !stickyPanelCollapsed
+            ? 'sticky top-0 z-10 bg-white dark:bg-gray-950 pb-4 pt-2 border-b-2 border-gray-200 dark:border-gray-800 lg:static lg:border-b-0'
+            : ''
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Ingredients
+          </h2>
+          {/* Toggle button for mobile - only show on small screens */}
+          <button
+            onClick={() => setStickyPanelCollapsed(!stickyPanelCollapsed)}
+            className="lg:hidden rounded-md bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-950"
+            aria-label={
+              stickyPanelCollapsed ? 'Show ingredients panel' : 'Hide ingredients panel'
+            }
+            aria-expanded={!stickyPanelCollapsed}
+          >
+            {stickyPanelCollapsed ? '▼ Show' : '▲ Hide'}
+          </button>
+        </div>
+
+        {/* Collapsible content */}
+        {!stickyPanelCollapsed && (
+          <div className="space-y-2">
+            {recipe.ingredients.map((ingredient, idx) => (
             <div
               key={idx}
               className="flex items-start gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-900"
             >
               <input
                 type="checkbox"
-                className="mt-1 cursor-pointer"
-                disabled
-                aria-label={`Ingredient ${idx + 1}`}
+                checked={checkedIngredients.has(idx)}
+                onChange={() => toggleIngredient(idx)}
+                className="mt-1 h-5 w-5 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-offset-gray-950"
+                aria-label={`${ingredient.quantity} ${ingredient.unit || ''} ${ingredient.name}`.trim()}
+                aria-checked={checkedIngredients.has(idx)}
               />
-              <div className="flex-1 min-w-0">
+              <div
+                className={`flex-1 min-w-0 transition-opacity ${
+                  checkedIngredients.has(idx)
+                    ? 'opacity-50 line-through decoration-gray-400 dark:decoration-gray-600'
+                    : ''
+                }`}
+              >
                 <p className="text-base text-gray-900 dark:text-white">
                   <span className="font-semibold">
                     {ingredient.quantity}
@@ -214,8 +295,9 @@ export function RecipeDetail({
                 )}
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Instructions section */}
@@ -227,13 +309,38 @@ export function RecipeDetail({
           {recipe.steps.map((step, idx) => (
             <div
               key={idx}
-              className="flex gap-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-900"
+              role="button"
+              tabIndex={0}
+              onClick={() =>
+                setHighlightedStep(
+                  step.stepNumber === highlightedStep ? null : step.stepNumber
+                )
+              }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setHighlightedStep(
+                    step.stepNumber === highlightedStep
+                      ? null
+                      : step.stepNumber
+                  )
+                }
+              }}
+              className={`flex gap-4 rounded-lg p-4 cursor-pointer transition-all ${
+                step.stepNumber === highlightedStep
+                  ? 'bg-blue-100 border-2 border-blue-500 shadow-lg dark:bg-blue-900/50 dark:border-blue-400'
+                  : 'bg-blue-50 border-2 border-transparent hover:border-blue-200 dark:bg-blue-900 dark:hover:border-blue-700'
+              } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-950`}
+              aria-label={`Step ${step.stepNumber}${
+                step.stepNumber === highlightedStep ? ', currently highlighted' : ''
+              }`}
+              aria-pressed={step.stepNumber === highlightedStep}
             >
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-white dark:bg-blue-700">
                 <span className="font-bold text-sm">{step.stepNumber}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-base text-gray-900 dark:text-white">
+                <p className="recipe-instruction text-base text-gray-900 dark:text-white">
                   {step.instruction}
                 </p>
                 {step.notes && (
