@@ -94,6 +94,7 @@ export function ImportRecipeModal({ isOpen, onClose }: ImportRecipeModalProps) {
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              onFocus={(e) => e.currentTarget.select()}
               placeholder="https://example.com/recipe/chocolate-cake"
               required
               disabled={isImporting || success}

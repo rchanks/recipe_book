@@ -367,31 +367,34 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check delete permission (admin only)
-    if (!hasPermission(session.user.role, 'recipe:delete')) {
-      return NextResponse.json(
-        { error: 'Forbidden: Only admins can delete recipes' },
-        { status: 403 }
-      )
-    }
-
     // Verify access to recipe's group
     await requireRecipeAccess(session.user.id, id)
 
-    // Double-check admin status
-    const canDelete = await canDeleteRecipe(session.user.id, session.user.groupId)
-    if (!canDelete) {
+    // Fetch recipe to check if it's a draft and get photo
+    const recipe = await prisma.recipe.findUnique({
+      where: { id },
+      select: { status: true, createdBy: true, photoUrl: true },
+    })
+
+    if (!recipe) {
+      return NextResponse.json({ error: 'Recipe not found' }, { status: 404 })
+    }
+
+    // Allow deletion if:
+    // 1. User is the creator of a DRAFT, OR
+    // 2. User is an admin
+    const isDraft = recipe.status === 'DRAFT'
+    const isCreator = recipe.createdBy === session.user.id
+    const isAdmin = hasPermission(session.user.role, 'recipe:delete')
+
+    if (!isAdmin && !(isDraft && isCreator)) {
       return NextResponse.json(
-        { error: 'Forbidden: Only admins can delete recipes' },
+        { error: 'Forbidden: Only admins can delete recipes, or the creator can delete their own drafts' },
         { status: 403 }
       )
     }
 
     // Before deleting recipe, delete associated photo if exists
-    const recipe = await prisma.recipe.findUnique({
-      where: { id },
-      select: { photoUrl: true },
-    })
 
     if (recipe?.photoUrl) {
       try {

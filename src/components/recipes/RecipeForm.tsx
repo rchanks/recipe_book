@@ -334,6 +334,38 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
     }
   }
 
+  const handleDiscard = async () => {
+    if (!recipe?.id) return
+
+    const confirmed = window.confirm(
+      'Are you sure you want to discard this draft? This action cannot be undone.'
+    )
+    if (!confirmed) return
+
+    try {
+      setIsSubmitting(true)
+
+      const response = await fetch(`/api/recipes/${recipe.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to discard draft')
+      }
+
+      // Redirect to recipes page
+      router.push('/recipes')
+      router.refresh()
+    } catch (err) {
+      console.error('Discard draft error:', err)
+      setError(
+        err instanceof Error ? err.message : 'Failed to discard draft'
+      )
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Error message */}
@@ -693,31 +725,41 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
       </div>
 
       {/* Form actions */}
-      <div className="flex gap-3 border-t border-gray-200 pt-6 dark:border-gray-700">
+      <div className="space-y-3 border-t border-gray-200 pt-6 dark:border-gray-700">
         {/* Phase 10: Different buttons for draft recipes */}
         {mode === 'edit' && recipe?.status === 'DRAFT' ? (
           <>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 rounded-lg bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50 dark:bg-green-700 dark:hover:bg-green-800"
-            >
-              {isSubmitting ? 'Publishing...' : 'Publish Recipe'}
-            </button>
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 rounded-lg bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50 dark:bg-green-700 dark:hover:bg-green-800"
+              >
+                {isSubmitting ? 'Publishing...' : 'Publish Recipe'}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveDraft}
+                disabled={isSubmitting}
+                className="rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                Save as Draft
+              </button>
+            </div>
             <button
               type="button"
-              onClick={handleSaveDraft}
+              onClick={handleDiscard}
               disabled={isSubmitting}
-              className="rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="w-full rounded-lg border border-red-300 px-4 py-3 font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
             >
-              Save as Draft
+              {isSubmitting ? 'Discarding...' : 'Discard Draft'}
             </button>
           </>
         ) : (
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800"
+            className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800"
           >
             {isSubmitting
               ? mode === 'create'
@@ -730,7 +772,7 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
         )}
         <Link
           href="/recipes"
-          className="rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="block rounded-lg border border-gray-300 px-4 py-3 text-center font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           Cancel
         </Link>
