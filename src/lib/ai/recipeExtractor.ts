@@ -61,9 +61,29 @@ export class RecipeExtractorService {
       }
     } catch (error) {
       console.error('Recipe extraction error:', error)
+
+      // Provide more user-friendly error messages
+      let errorMessage = 'Failed to extract recipe from URL'
+
+      if (error instanceof Error) {
+        if (error.message.includes('401') || error.message.includes('authentication')) {
+          errorMessage = 'Authentication error: Invalid API key or permissions issue'
+        } else if (error.message.includes('429')) {
+          errorMessage = 'Rate limited: Please wait a moment and try again'
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Request timeout: The website took too long to respond'
+        } else if (error.message.includes('not found') || error.message.includes('404')) {
+          errorMessage = 'URL not found or page does not exist'
+        } else if (error.message.includes('No recipe found')) {
+          errorMessage = 'No recipe data could be extracted from this URL'
+        } else {
+          errorMessage = error.message
+        }
+      }
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       }
     }
   }

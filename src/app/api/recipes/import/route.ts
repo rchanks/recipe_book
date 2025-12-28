@@ -122,6 +122,15 @@ function sanitizeExtractedRecipe(recipe: ExtractedRecipe): ExtractedRecipe {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Verify AI service is configured
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('[RecipeImport] ANTHROPIC_API_KEY is not configured')
+      return NextResponse.json(
+        { error: 'Recipe import service is not configured. Please contact administrator.' },
+        { status: 503 }
+      )
+    }
+
     // Get session and check authentication
     const session = await auth()
     if (!session?.user) {
