@@ -186,7 +186,8 @@ export async function POST(request: NextRequest) {
     // Sanitize extracted data
     const sanitized = sanitizeExtractedRecipe(extractionResult.recipe)
 
-    // Validate required fields
+    // Validate required fields (only title is required for drafts)
+    // Users can fill in missing ingredients and steps before publishing
     if (!sanitized.title || sanitized.title.length === 0) {
       return NextResponse.json(
         { error: 'Recipe title is required' },
@@ -194,23 +195,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (
-      !Array.isArray(sanitized.ingredients) ||
-      sanitized.ingredients.length === 0 ||
-      !sanitized.ingredients.some((ing) => ing && ing.name)
-    ) {
-      return NextResponse.json(
-        { error: 'Recipe must have at least one ingredient' },
-        { status: 400 }
-      )
+    // Ensure arrays exist (can be empty for incomplete imports)
+    if (!Array.isArray(sanitized.ingredients)) {
+      sanitized.ingredients = []
     }
-
-    if (!Array.isArray(sanitized.steps) || sanitized.steps.length === 0 ||
-        !sanitized.steps.some((step) => step && step.instruction)) {
-      return NextResponse.json(
-        { error: 'Recipe must have at least one step' },
-        { status: 400 }
-      )
+    if (!Array.isArray(sanitized.steps)) {
+      sanitized.steps = []
     }
 
     // Create draft recipe

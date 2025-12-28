@@ -251,30 +251,36 @@ Return the JSON now:`
         throw new Error(parsed.error)
       }
 
-      // Validate required fields
-      if (!parsed.title || !Array.isArray(parsed.ingredients) || !Array.isArray(parsed.steps)) {
-        console.error('[RecipeExtractor] Invalid structure:', {
-          hasTitle: !!parsed.title,
-          hasIngredients: Array.isArray(parsed.ingredients),
-          hasSteps: Array.isArray(parsed.steps)
-        })
-        throw new Error('Invalid recipe structure from AI')
+      // Validate minimum required fields (title is required, ingredients/steps can be empty for drafts)
+      if (!parsed.title) {
+        console.error('[RecipeExtractor] Missing title')
+        throw new Error('Recipe must have a title')
       }
 
-      if (parsed.ingredients.length === 0 || parsed.steps.length === 0) {
-        throw new Error('Recipe must have at least one ingredient and one step')
+      // Ensure arrays exist (can be empty for drafts)
+      if (!Array.isArray(parsed.ingredients)) {
+        parsed.ingredients = []
+      }
+      if (!Array.isArray(parsed.steps)) {
+        parsed.steps = []
       }
 
-      // Validate ingredients have names
-      const validIngredients = parsed.ingredients.every((ing: any) => ing.name)
-      if (!validIngredients) {
-        throw new Error('All ingredients must have a name')
+      // Validate ingredients that do exist have names
+      if (parsed.ingredients.length > 0) {
+        const validIngredients = parsed.ingredients.every((ing: any) => ing && ing.name)
+        if (!validIngredients) {
+          console.error('[RecipeExtractor] Some ingredients missing name field')
+          throw new Error('All ingredients must have a name')
+        }
       }
 
-      // Validate steps have instructions
-      const validSteps = parsed.steps.every((step: any) => step.instruction)
-      if (!validSteps) {
-        throw new Error('All steps must have instructions')
+      // Validate steps that do exist have instructions
+      if (parsed.steps.length > 0) {
+        const validSteps = parsed.steps.every((step: any) => step && step.instruction)
+        if (!validSteps) {
+          console.error('[RecipeExtractor] Some steps missing instruction field')
+          throw new Error('All steps must have instructions')
+        }
       }
 
       console.log('[RecipeExtractor] Successfully parsed recipe:', parsed.title)
