@@ -101,15 +101,19 @@ export class RecipeExtractorService {
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          'Accept-Encoding': 'gzip, deflate',
-          'DNT': '1',
-          'Connection': 'keep-alive',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/avif,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Cache-Control': 'max-age=0',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
           'Upgrade-Insecure-Requests': '1',
         },
-        // 10 second timeout
-        signal: AbortSignal.timeout(10000),
+        redirect: 'follow',
+        // 15 second timeout for slow sites
+        signal: AbortSignal.timeout(15000),
       })
 
       if (!response.ok) {
@@ -154,14 +158,28 @@ export class RecipeExtractorService {
 
   private buildExtractionPrompt(htmlContent: string): string {
     // Limit HTML content to avoid token limits
-    const truncatedHtml = htmlContent.slice(0, 50000)
+    const truncatedHtml = htmlContent.slice(0, 80000)
 
-    return `You are a recipe extraction assistant. Extract structured recipe data from the provided HTML.
+    return `You are a recipe extraction assistant. Your task is to extract recipe information from HTML content and return it as JSON.
 
 HTML Content:
 ${truncatedHtml}
 
-Extract the following information in valid JSON format:
+INSTRUCTIONS:
+1. Look for a recipe in the HTML content. Recipes typically have:
+   - A title/name
+   - A list of ingredients with quantities
+   - Step-by-step cooking instructions
+   - Optional: servings, prep time, cook time, description, notes
+
+2. Extract as much recipe information as you can find. Use ANY ingredient or cooking instruction text you find - don't worry about perfect structure.
+
+3. For cooking times: If you see "15 mins" or "15 minutes", use 15. If "1 hour 30 mins", use 90. Return as integers (minutes).
+
+4. For quantities: Extract "1 cup", "2 tbsp", "3 cloves", etc. exactly as written.
+
+5. Return ONLY a valid JSON object (no markdown, no code blocks, no explanation):
+
 {
   "title": "Recipe title",
   "description": "Brief description (optional)",
@@ -169,33 +187,31 @@ Extract the following information in valid JSON format:
     {
       "quantity": "1",
       "unit": "cup",
-      "name": "flour",
-      "note": "sifted (optional)"
+      "name": "ingredient name",
+      "note": "preparation notes (optional)"
     }
   ],
   "steps": [
     {
       "stepNumber": 1,
       "instruction": "Step instruction",
-      "notes": "Optional notes"
+      "notes": "Additional notes (optional)"
     }
   ],
   "servings": 4,
   "prepTime": 15,
   "cookTime": 30,
-  "notes": "Additional recipe notes (optional)"
+  "notes": "Any additional notes (optional)"
 }
 
-CRITICAL RULES:
-1. Return ONLY valid JSON - no markdown, no explanation, no preamble
-2. Ensure all required fields are present (title, ingredients, steps)
-3. ingredients must be an array with at least one item
-4. steps must be an array with at least one item
-5. Each ingredient must have a "name" field
-6. Each step must have "stepNumber" and "instruction" fields
-7. Use null for optional fields if not found
-8. Do not invent or guess recipe data - extract only what's clearly present
-9. If no recipe is found in the HTML, return: {"error": "No recipe found"}
+RULES:
+- ingredients and steps MUST have at least 1 item each
+- Every ingredient MUST have a "name" field
+- Every step MUST have "stepNumber" (1, 2, 3...) and "instruction" fields
+- Use null for optional fields that aren't found
+- Do NOT invent ingredients or steps - only extract what's clearly in the HTML
+- If you find partial information, use it (e.g., ingredients list without times is fine)
+- If NO recipe is found at all, return: {"error": "No recipe found"}
 
 Return the JSON now:`
   }
