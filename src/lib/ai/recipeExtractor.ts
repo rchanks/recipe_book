@@ -47,20 +47,28 @@ export class RecipeExtractorService {
   }
 
   async extractFromUrl(url: string): Promise<RecipeExtractionResult> {
+    console.log(`[RecipeExtractor] Starting extraction for URL: ${url}`)
     try {
       // Fetch webpage content
       const htmlContent = await this.fetchWebpage(url)
+      console.log(`[RecipeExtractor] Fetched ${htmlContent.length} bytes from ${url}`)
 
       // Extract recipe using Claude
       const extractedRecipe = await this.extractRecipeWithClaude(htmlContent)
 
+      console.log(`[RecipeExtractor] Successfully extracted recipe: ${extractedRecipe.title}`)
       return {
         success: true,
         recipe: extractedRecipe,
         confidence: this.assessConfidence(extractedRecipe),
       }
     } catch (error) {
-      console.error('Recipe extraction error:', error)
+      const errorDetails = error instanceof Error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join(' '),
+      } : String(error)
+      console.error('[RecipeExtractor] Extraction error:', errorDetails)
 
       // Provide more user-friendly error messages
       let errorMessage = 'Failed to extract recipe from URL'
@@ -92,7 +100,13 @@ export class RecipeExtractorService {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'RecipeBookBot/1.0 (Recipe extraction service)',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate',
+          'DNT': '1',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
         },
         // 10 second timeout
         signal: AbortSignal.timeout(10000),
