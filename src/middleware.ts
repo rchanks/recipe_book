@@ -34,7 +34,7 @@ export default auth((req) => {
   const isAuthRoute = authRoutes.includes(pathname)
 
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    return NextResponse.redirect(new URL('/recipes', req.url))
   }
 
   return NextResponse.next()
