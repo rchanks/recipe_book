@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { hasPermission } from '@/lib/authorization'
 import { RecipePageHeader } from '@/components/recipes/RecipePageHeader'
 import { RecipeList } from '@/components/recipes/RecipeList'
+import { prisma } from '@/lib/prisma'
 
 /**
  * Recipe list page - displays all recipes for the user's group
@@ -23,12 +24,19 @@ export default async function RecipesPage() {
   // Check create permission
   const canCreate = hasPermission(session.user.role, 'recipe:create')
 
+  // Fetch group to get recipe book title
+  const group = await prisma.group.findUnique({
+    where: { id: session.user.groupId },
+    select: { recipeBookTitle: true },
+  })
+
   return (
     <main className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-950">
       {/* Header with menu */}
       <RecipePageHeader
         userRole={session.user.role}
         canCreate={canCreate}
+        recipeBookTitle={group?.recipeBookTitle}
       />
 
       {/* Content */}

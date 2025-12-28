@@ -56,6 +56,7 @@ export interface Group {
   id: string
   name: string
   slug: string
+  recipeBookTitle?: string | null
   allowPowerUserEdit: boolean
   createdAt: Date
   updatedAt: Date
@@ -229,5 +230,6 @@ export interface CommentsResponse {
 
 export interface UpdateGroupRequest {
   name?: string
+  recipeBookTitle?: string | null
   allowPowerUserEdit?: boolean
 }

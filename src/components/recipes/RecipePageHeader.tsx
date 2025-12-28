@@ -15,11 +15,13 @@ import { hasPermission } from '@/lib/authorization'
 interface RecipePageHeaderProps {
   userRole: string
   canCreate: boolean
+  recipeBookTitle?: string | null
 }
 
 export function RecipePageHeader({
   userRole,
   canCreate,
+  recipeBookTitle,
 }: RecipePageHeaderProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const menuRef = React.useRef<HTMLDivElement>(null)
@@ -50,7 +52,7 @@ export function RecipePageHeader({
         <div className="mb-4 flex items-center justify-between">
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Recipes
+              {recipeBookTitle || 'Recipes'}
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
               Your family's recipe collection

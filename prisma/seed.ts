@@ -50,6 +50,7 @@ async function main() {
     data: {
       name: "Smith Family's Recipes",
       slug: 'smith-family',
+      recipeBookTitle: 'Smith Family Cookbook',
       allowPowerUserEdit: true,
     },
   })

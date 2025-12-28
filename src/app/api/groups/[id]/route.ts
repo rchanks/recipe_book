@@ -33,6 +33,7 @@ export async function GET(
         id: true,
         name: true,
         slug: true,
+        recipeBookTitle: true,
         allowPowerUserEdit: true,
         createdAt: true,
         updatedAt: true,
@@ -104,7 +105,7 @@ export async function PUT(
 
     // Parse request body
     const body: UpdateGroupRequest = await request.json()
-    const { name, allowPowerUserEdit } = body
+    const { name, recipeBookTitle, allowPowerUserEdit } = body
 
     // Build update data
     const updateData: any = {}
@@ -155,6 +156,25 @@ export async function PUT(
       }
 
       updateData.allowPowerUserEdit = allowPowerUserEdit
+    }
+
+    // Validate and update recipeBookTitle if provided
+    if (recipeBookTitle !== undefined) {
+      if (recipeBookTitle !== null && typeof recipeBookTitle !== 'string') {
+        return NextResponse.json(
+          { error: 'Recipe book title must be a string or null' },
+          { status: 400 }
+        )
+      }
+
+      if (recipeBookTitle && recipeBookTitle.length > 50) {
+        return NextResponse.json(
+          { error: 'Recipe book title must be 50 characters or less' },
+          { status: 400 }
+        )
+      }
+
+      updateData.recipeBookTitle = recipeBookTitle ? recipeBookTitle.trim() : null
     }
 
     // If no fields to update, return error

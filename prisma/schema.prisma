@@ -49,6 +49,7 @@ model Group {
   id                 String            @id @default(cuid())
   name               String
   slug               String            @unique
+  recipeBookTitle    String?           // Phase 9D: Custom recipe book title
   allowPowerUserEdit Boolean           @default(true)
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
