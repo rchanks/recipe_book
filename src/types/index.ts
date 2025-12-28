@@ -52,6 +52,12 @@ export enum Role {
   READ_ONLY = 'READ_ONLY',
 }
 
+// Phase 10: Recipe Status
+export enum RecipeStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+}
+
 export interface Group {
   id: string
   name: string
@@ -102,6 +108,8 @@ export interface Recipe {
   notes?: string | null
   familyStory?: string | null
   photoUrl?: string | null
+  status: RecipeStatus // Phase 10: Recipe status (DRAFT or PUBLISHED)
+  sourceUrl?: string | null // Phase 10: URL where recipe was imported from
   createdBy: string
   creator: UserPublic
   groupId: string
@@ -133,6 +141,7 @@ export interface RecipeFormData {
   categoryIds: string[]
   tagIds: string[]
   photoUrl?: string | null
+  status?: RecipeStatus // Phase 10: Optional for forms
 }
 
 // Phase 6: Category and Tag types (prepare for future)

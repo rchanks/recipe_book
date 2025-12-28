@@ -76,6 +76,12 @@ model GroupMembership {
   @@map("group_memberships")
 }
 
+// Phase 10: Recipe status for draft management
+enum RecipeStatus {
+  DRAFT
+  PUBLISHED
+}
+
 // Phase 4: Recipe model with structured ingredients and steps
 model Recipe {
   id          String   @id @default(cuid())
@@ -93,6 +99,10 @@ model Recipe {
   notes       String?  @db.Text
   familyStory String?  @db.Text
   photoUrl    String?  // Phase 8: Photo upload
+
+  // Phase 10: Draft management
+  status      RecipeStatus @default(PUBLISHED)
+  sourceUrl   String?  // URL where recipe was imported from
 
   // Relations
   createdBy   String
@@ -112,6 +122,8 @@ model Recipe {
   @@index([groupId])
   @@index([createdBy])
   @@index([title])
+  @@index([status])
+  @@index([createdBy, status])
   @@map("recipes")
 }
 

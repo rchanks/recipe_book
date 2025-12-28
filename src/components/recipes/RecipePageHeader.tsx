@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation'
 import { MenuIcon } from '@/components/ui/icons/MenuIcon'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { hasPermission } from '@/lib/authorization'
+import { ImportRecipeModal } from './ImportRecipeModal' // Phase 10: Recipe import
 
 interface RecipePageHeaderProps {
   userRole: string
@@ -25,6 +26,7 @@ export function RecipePageHeader({
   recipeBookTitle,
 }: RecipePageHeaderProps) {
   const [isOpen, setIsOpen] = React.useState(false)
+  const [showImportModal, setShowImportModal] = React.useState(false) // Phase 10: Import modal
   const menuRef = React.useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -158,15 +160,30 @@ export function RecipePageHeader({
           </div>
         </div>
 
-        {/* Add Recipe button - visible below menu */}
+        {/* Add Recipe & Import Recipe buttons - visible below menu */}
         {canCreate && (
-          <Link
-            href="/recipes/new"
-            className="inline-block rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-          >
-            + Add Recipe
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              href="/recipes/new"
+              className="inline-block rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+            >
+              + Add Recipe
+            </Link>
+            {/* Phase 10: Import from URL button */}
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="inline-block rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+            >
+              Import from URL
+            </button>
+          </div>
         )}
+
+        {/* Phase 10: Import Recipe Modal */}
+        <ImportRecipeModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+        />
       </div>
     </div>
   )

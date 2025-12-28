@@ -58,6 +58,11 @@ export async function GET(
       return NextResponse.json({ error: 'Recipe not found' }, { status: 404 })
     }
 
+    // Phase 10: Draft access control - only creator can view drafts
+    if (recipe.status === 'DRAFT' && recipe.createdBy !== session.user.id) {
+      return NextResponse.json({ error: 'Recipe not found' }, { status: 404 })
+    }
+
     const transformedRecipe: Recipe = {
       ...recipe,
       ingredients: recipe.ingredients as unknown as Ingredient[],
@@ -129,6 +134,24 @@ export async function PUT(
       )
     }
 
+    // Phase 10: Check draft ownership before getting full recipe
+    const existingRecipe = await prisma.recipe.findUnique({
+      where: { id },
+      select: { status: true, createdBy: true },
+    })
+
+    if (!existingRecipe) {
+      return NextResponse.json({ error: 'Recipe not found' }, { status: 404 })
+    }
+
+    // Phase 10: If draft, only creator can edit
+    if (existingRecipe.status === 'DRAFT' && existingRecipe.createdBy !== session.user.id) {
+      return NextResponse.json(
+        { error: 'You can only edit your own drafts' },
+        { status: 403 }
+      )
+    }
+
     // Parse request body
     const body = await request.json()
     const {
@@ -144,6 +167,7 @@ export async function PUT(
       photoUrl,
       categoryIds = [],
       tagIds = [],
+      status, // Phase 10: Allow status updates (e.g., DRAFT -> PUBLISHED)
     } = body
 
     // Validate fields (same as POST)
@@ -227,6 +251,14 @@ export async function PUT(
       }
     }
 
+    // Phase 10: Validate status field if provided
+    if (status && status !== 'DRAFT' && status !== 'PUBLISHED') {
+      return NextResponse.json(
+        { error: 'Invalid status value. Must be DRAFT or PUBLISHED' },
+        { status: 400 }
+      )
+    }
+
     // Delete existing category and tag associations
     await Promise.all([
       prisma.recipeCategory.deleteMany({
@@ -255,6 +287,7 @@ export async function PUT(
         notes: notes ? notes.trim() : null,
         familyStory: familyStory ? familyStory.trim() : null,
         photoUrl: photoUrl || null,
+        ...(status && { status: status as 'DRAFT' | 'PUBLISHED' }), // Phase 10: Allow status updates
         categories: {
           create: (categoryIds as string[]).map((catId) => ({
             categoryId: catId,

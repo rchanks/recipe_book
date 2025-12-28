@@ -30,18 +30,45 @@ export async function GET(request: NextRequest) {
     const tagIds = searchParams.get('tagIds')?.split(',').filter(Boolean) || []
     const favoritesOnly = searchParams.get('favoritesOnly') === 'true'
     const sortBy = searchParams.get('sortBy') || 'recent'
+    const showDraftsOnly = searchParams.get('draftsOnly') === 'true'
 
     // Build where clause dynamically
     const where: any = {
       groupId: session.user.groupId,
     }
 
-    // Text search
+    // Phase 10: Draft filtering
+    // By default, show published recipes + user's own drafts
+    // With ?draftsOnly=true, show only user's drafts
+    const draftFilter = showDraftsOnly
+      ? { status: 'DRAFT', createdBy: session.user.id }
+      : {
+          OR: [
+            { status: 'PUBLISHED' },
+            { status: 'DRAFT', createdBy: session.user.id },
+          ],
+        }
+
+    // Text search - combine with draft filter
     if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ]
+      const searchFilter = {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+      // Merge draft filter with search filter
+      if (showDraftsOnly) {
+        Object.assign(where, draftFilter, searchFilter)
+      } else {
+        // For published recipes, apply search within the OR condition
+        where.AND = [
+          draftFilter,
+          searchFilter,
+        ]
+      }
+    } else {
+      Object.assign(where, draftFilter)
     }
 
     // Category filter
@@ -197,6 +224,7 @@ export async function POST(request: NextRequest) {
       photoUrl,
       categoryIds = [],
       tagIds = [],
+      status = 'PUBLISHED', // Phase 10: Default to published
     } = body
 
     // Validate required fields
@@ -282,6 +310,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Phase 10: Validate status field
+    if (status !== 'DRAFT' && status !== 'PUBLISHED') {
+      return NextResponse.json(
+        { error: 'Invalid status value. Must be DRAFT or PUBLISHED' },
+        { status: 400 }
+      )
+    }
+
     // Create recipe with categories and tags
     const recipe = await prisma.recipe.create({
       data: {
@@ -299,6 +335,8 @@ export async function POST(request: NextRequest) {
         notes: notes ? notes.trim() : null,
         familyStory: familyStory ? familyStory.trim() : null,
         photoUrl: photoUrl || null,
+        status: status as 'DRAFT' | 'PUBLISHED', // Phase 10: Recipe status
+        sourceUrl: null, // Only set by import endpoint
         createdBy: session.user.id,
         groupId: session.user.groupId,
         categories: {

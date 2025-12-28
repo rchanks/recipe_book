@@ -222,6 +222,8 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
         photoUrl,
         categoryIds: formData.categoryIds,
         tagIds: formData.tagIds,
+        // Phase 10: Set status to PUBLISHED when publishing a draft
+        ...(mode === 'edit' && recipe?.status === 'DRAFT' && { status: 'PUBLISHED' }),
       }
 
       // Make API request
@@ -257,6 +259,81 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
     }
   }
 
+  // Phase 10: Handle saving as draft (for draft recipes)
+  const handleSaveDraft = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+
+      // Upload photo if selected
+      let photoUrl: string | null = null
+      try {
+        photoUrl = await uploadPhoto()
+      } catch (photoErr) {
+        console.error('Photo upload failed:', photoErr)
+        setError(
+          photoErr instanceof Error ? photoErr.message : 'Failed to upload photo'
+        )
+        return
+      }
+
+      const requestBody = {
+        title: formData.title.trim(),
+        description: formData.description ? formData.description.trim() : null,
+        ingredients: formData.ingredients.filter((i) => i.name.trim().length > 0),
+        steps: formData.steps
+          .filter((s) => s.instruction.trim().length > 0)
+          .map((s, idx) => ({
+            ...s,
+            stepNumber: idx + 1,
+            instruction: s.instruction.trim(),
+            notes: s.notes ? s.notes.trim() : null,
+          })),
+        servings: formData.servings ? parseInt(formData.servings) : null,
+        prepTime: formData.prepTime ? parseInt(formData.prepTime) : null,
+        cookTime: formData.cookTime ? parseInt(formData.cookTime) : null,
+        notes: formData.notes ? formData.notes.trim() : null,
+        familyStory: formData.familyStory ? formData.familyStory.trim() : null,
+        photoUrl,
+        categoryIds: formData.categoryIds,
+        tagIds: formData.tagIds,
+        status: 'DRAFT', // Keep as draft
+      }
+
+      const response = await fetch(`/api/recipes/${recipe?.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to save draft')
+      }
+
+      // Redirect to recipes page
+      router.push('/recipes')
+      router.refresh()
+    } catch (err) {
+      console.error('Draft save error:', err)
+      setError(
+        err instanceof Error ? err.message : 'Failed to save draft'
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Error message */}
@@ -266,6 +343,42 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
           role="alert"
         >
           {error}
+        </div>
+      )}
+
+      {/* Phase 10: Draft indicator */}
+      {mode === 'edit' && recipe?.status === 'DRAFT' && (
+        <div className="rounded-lg border-2 border-yellow-400 bg-yellow-50 p-4 dark:border-yellow-600 dark:bg-yellow-900/20">
+          <div className="flex items-start">
+            <svg className="h-5 w-5 flex-shrink-0 text-yellow-600 dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <div className="ml-3">
+              <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+                Draft Recipe
+              </h3>
+              <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+                Review and edit the information below, then publish when ready.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 10: Source URL display for imported recipes */}
+      {mode === 'edit' && recipe?.sourceUrl && (
+        <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+            Imported from:
+          </p>
+          <a
+            href={recipe.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 block truncate text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            {recipe.sourceUrl}
+          </a>
         </div>
       )}
 
@@ -581,19 +694,40 @@ export function RecipeForm({ recipe, mode }: RecipeFormProps) {
 
       {/* Form actions */}
       <div className="flex gap-3 border-t border-gray-200 pt-6 dark:border-gray-700">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800"
-        >
-          {isSubmitting
-            ? mode === 'create'
-              ? 'Creating...'
-              : 'Saving...'
-            : mode === 'create'
-              ? 'Create Recipe'
-              : 'Save Changes'}
-        </button>
+        {/* Phase 10: Different buttons for draft recipes */}
+        {mode === 'edit' && recipe?.status === 'DRAFT' ? (
+          <>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 rounded-lg bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50 dark:bg-green-700 dark:hover:bg-green-800"
+            >
+              {isSubmitting ? 'Publishing...' : 'Publish Recipe'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              disabled={isSubmitting}
+              className="rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Save as Draft
+            </button>
+          </>
+        ) : (
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800"
+          >
+            {isSubmitting
+              ? mode === 'create'
+                ? 'Creating...'
+                : 'Saving...'
+              : mode === 'create'
+                ? 'Create Recipe'
+                : 'Save Changes'}
+          </button>
+        )}
         <Link
           href="/recipes"
           className="rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
