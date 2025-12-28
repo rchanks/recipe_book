@@ -8,6 +8,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { MenuIcon } from '@/components/ui/icons/MenuIcon'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { hasPermission } from '@/lib/authorization'
@@ -45,6 +46,32 @@ export function RecipePageHeader({
 
   const isAdmin = userRole === 'ADMIN'
   const canManageMetadata = hasPermission(userRole, 'category:create')
+
+  // Theme toggle menu item component
+  const ThemeToggleMenuItem = () => {
+    const [mounted, setMounted] = React.useState(false)
+    const { theme, setTheme } = useTheme()
+
+    React.useEffect(() => {
+      setMounted(true)
+    }, [])
+
+    if (!mounted) {
+      return null
+    }
+
+    return (
+      <button
+        onClick={() => {
+          setTheme(theme === 'dark' ? 'light' : 'dark')
+          setIsOpen(false)
+        }}
+        className="block w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+      >
+        {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+      </button>
+    )
+  }
 
   return (
     <div className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
@@ -115,6 +142,9 @@ export function RecipePageHeader({
                     Manage Tags
                   </Link>
                 )}
+
+                {/* Theme Toggle - available to all users */}
+                <ThemeToggleMenuItem />
 
                 {/* Logout */}
                 <LogoutButton
