@@ -202,15 +202,33 @@ Return the JSON now:`
 
   private parseClaudeResponse(responseText: string): ExtractedRecipe {
     try {
+      console.log('[RecipeExtractor] Parsing response, length:', responseText.length)
+      console.log('[RecipeExtractor] First 200 chars:', responseText.slice(0, 200))
+
       // Clean response (remove markdown code blocks if present)
       let cleaned = responseText.trim()
+
+      // Remove markdown code blocks
       if (cleaned.startsWith('```json')) {
-        cleaned = cleaned.replace(/^```json\n/, '').replace(/\n```$/, '')
+        cleaned = cleaned.slice(7) // Remove ```json
+        cleaned = cleaned.replace(/```\s*$/, '') // Remove closing ```
       } else if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/^```\n/, '').replace(/\n```$/, '')
+        cleaned = cleaned.slice(3) // Remove ```
+        cleaned = cleaned.replace(/```\s*$/, '') // Remove closing ```
       }
 
-      const parsed = JSON.parse(cleaned)
+      cleaned = cleaned.trim()
+      console.log('[RecipeExtractor] Cleaned response length:', cleaned.length)
+      console.log('[RecipeExtractor] Cleaned first 200 chars:', cleaned.slice(0, 200))
+
+      let parsed
+      try {
+        parsed = JSON.parse(cleaned)
+      } catch (parseError) {
+        console.error('[RecipeExtractor] JSON parse failed:', parseError)
+        console.error('[RecipeExtractor] Cleaned text:', cleaned.slice(0, 300))
+        throw new Error(`Invalid JSON response from AI: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
+      }
 
       // Check for error response
       if (parsed.error) {
@@ -219,6 +237,11 @@ Return the JSON now:`
 
       // Validate required fields
       if (!parsed.title || !Array.isArray(parsed.ingredients) || !Array.isArray(parsed.steps)) {
+        console.error('[RecipeExtractor] Invalid structure:', {
+          hasTitle: !!parsed.title,
+          hasIngredients: Array.isArray(parsed.ingredients),
+          hasSteps: Array.isArray(parsed.steps)
+        })
         throw new Error('Invalid recipe structure from AI')
       }
 
@@ -238,11 +261,12 @@ Return the JSON now:`
         throw new Error('All steps must have instructions')
       }
 
+      console.log('[RecipeExtractor] Successfully parsed recipe:', parsed.title)
       return parsed as ExtractedRecipe
     } catch (error) {
-      console.error('Failed to parse Claude response:', error)
-      console.error('Raw response:', responseText.slice(0, 500))
-      throw new Error('Failed to parse AI response')
+      console.error('[RecipeExtractor] Parse error:', error instanceof Error ? error.message : String(error))
+      console.error('[RecipeExtractor] Full response (first 1000 chars):', responseText.slice(0, 1000))
+      throw error instanceof Error ? error : new Error('Failed to parse AI response')
     }
   }
 
