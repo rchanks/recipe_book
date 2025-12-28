@@ -33,7 +33,9 @@ export function RecipeBookTitleEditor({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to update recipe book title')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('API Error Response:', errorData)
+        throw new Error(errorData.error || 'Failed to update recipe book title')
       }
 
       setSuccessMessage('Recipe book title updated!')

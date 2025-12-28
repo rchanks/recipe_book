@@ -72,19 +72,21 @@ export default async function DashboardPage() {
               )}
             </div>
 
-            {/* Recipe Book Title Editor */}
-            <div className="border-t border-blue-200 pt-4 dark:border-blue-800">
-              <label htmlFor="recipeBookTitle" className="mb-2 block text-sm font-semibold text-blue-900 dark:text-blue-300">
-                Recipe Book Title
-              </label>
-              <p className="mb-3 text-xs text-blue-700 dark:text-blue-400">
-                Customize the title shown on your recipes page
-              </p>
-              <RecipeBookTitleEditor
-                currentTitle={group?.recipeBookTitle}
-                groupId={session.user.groupId}
-              />
-            </div>
+            {/* Recipe Book Title Editor - Admin only */}
+            {session.user.role === 'ADMIN' && (
+              <div className="border-t border-blue-200 pt-4 dark:border-blue-800">
+                <label htmlFor="recipeBookTitle" className="mb-2 block text-sm font-semibold text-blue-900 dark:text-blue-300">
+                  Recipe Book Title
+                </label>
+                <p className="mb-3 text-xs text-blue-700 dark:text-blue-400">
+                  Customize the title shown on your recipes page
+                </p>
+                <RecipeBookTitleEditor
+                  currentTitle={group?.recipeBookTitle}
+                  groupId={session.user.groupId}
+                />
+              </div>
+            )}
           </div>
         </div>
 
